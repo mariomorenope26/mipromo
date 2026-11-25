@@ -85,8 +85,7 @@ class CheckoutController extends Controller
                 $commissionAmount = round($total * ((float) $institution->commission_rate / 100), 2);
             }
 
-            $nextSeq = (int) Order::max('id') + 1;
-            $orderNumber = sprintf('PED-%s-%04d', now()->format('Y'), $nextSeq);
+            $orderNumber = Order::generateUniqueOrderNumber('PED');
 
             $isCardAutoApproved = $validated['payment_method'] === 'card_culqi';
 

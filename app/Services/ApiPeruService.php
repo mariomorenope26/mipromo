@@ -79,8 +79,11 @@ class ApiPeruService
             : $this->endpoint();
 
         $cacheKey = 'apiperu_dni_'.sha1($endpoint.'|'.$dni);
-        if ($useCache && $overrideToken === null && Cache::has($cacheKey)) {
-            return Cache::get($cacheKey);
+        if ($useCache && $overrideToken === null) {
+            $cached = Cache::get($cacheKey);
+            if (is_array($cached) && array_key_exists('ok', $cached)) {
+                return $cached;
+            }
         }
 
         $started = microtime(true);

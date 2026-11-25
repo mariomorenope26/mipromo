@@ -24,6 +24,8 @@ use Database\Seeders\DatabaseSeeder;
 use Database\Seeders\ProductionCatalogSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
@@ -980,4 +982,24 @@ it('supports superadmin backup generation, system wipe with confirmation, and de
     expect(Institution::count())->toBe(15);
     expect(AlumniProfile::count())->toBeGreaterThanOrEqual(20);
     expect(User::count())->toBeGreaterThanOrEqual(12);
+});
+
+it('serves system settings and config views without incomplete-object errors under database cache', function () {
+    $superAdmin = User::where('role', UserRole::SuperAdmin->value)->firstOrFail();
+
+    Config::set('cache.default', 'database');
+    Cache::setDefaultDriver('database');
+    Cache::store('database')->flush();
+
+    SystemSetting::setValue('apiperu_token', 'ap_db_cache_secret_998877', 'apiperu', true);
+
+    // Simular legado con objeto Eloquent serializado o caché fría + lecturas repetidas
+    $this->actingAs($superAdmin)->get(route('admin.settings.index'))->assertOk()->assertSee('ap_d');
+    $this->actingAs($superAdmin)->get(route('admin.settings.index'))->assertOk()->assertSee('Mantenimiento, Respaldo');
+    expect(SystemSetting::getValue('apiperu_token'))->toBe('ap_db_cache_secret_998877');
+    expect(SystemSetting::getValue('apiperu_enabled'))->toBe('1');
+    expect(Order::generateUniqueOrderNumber('PED'))->not->toBe('PED-2026-0001');
+
+    Config::set('cache.default', 'array');
+    Cache::setDefaultDriver('array');
 });

@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 use App\Enums\UserRole;
 use App\Models\SystemSetting;
 use App\Models\User;
@@ -8,20 +9,31 @@ use Database\Seeders\DatabaseSeeder;
 use Database\Seeders\ProductionCatalogSeeder;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
- * Instalador Web Oficial MiPromo v2 — Grupo JMSPERU Solutions
- * Optimizado para hosting compartido cPanel / BanaHosting (PHP 8.2+ y MySQL).
- * Incluye chequeo completo de extensiones (PDF/ZIP/cURL/GD), token apiperu.dev cifrado
- * y selector de modo: Producción Limpia, Demostración Completa o Sistema en Blanco.
+ * Instalador Web Oficial MiPromo v2.1 — Grupo JMSPERU Solutions
+ * Optimizado para hosting compartido cPanel / BanaHosting (PHP 8.2+ y MySQL/MariaDB).
+ * Incluye chequeo y preparación automática de directorios, escapes seguros en .env ($ y comillas),
+ * recarga limpia de variables de entorno, token apiperu.dev cifrado y selector de modo de datos.
  */
-session_start();
+@set_time_limit(300);
+@ini_set('memory_limit', '512M');
+
+if (session_status() === PHP_SESSION_NONE) {
+    @session_start();
+}
 
 $baseDir = dirname(__DIR__);
 $lockFile = $baseDir.'/storage/installed.lock';
 $envFile = $baseDir.'/.env';
+
+$scriptDir = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '')), '/');
+$appBaseHref = str_ends_with($scriptDir, '/public') ? substr($scriptDir, 0, -7) : $scriptDir;
+$storeUrl = ($appBaseHref === '' ? '' : $appBaseHref).'/';
+$loginUrl = ($appBaseHref === '' ? '' : $appBaseHref).'/login';
 
 function h(string $value): string
 {
@@ -33,22 +45,32 @@ function envEscape(string $value): string
     if ($value === '') {
         return '';
     }
-    if (preg_match('/[\s#"\\\\]/', $value)) {
-        return '"'.str_replace(['\\', '"'], ['\\\\', '\\"'], $value).'"';
+    if (preg_match('/[\s#"$\\\\]/', $value)) {
+        return '"'.str_replace(['\\', '"', '$'], ['\\\\', '\\"', '\\$'], $value).'"';
     }
 
     return $value;
 }
 
+function clearPreloadedEnv(array $keys): void
+{
+    foreach ($keys as $key) {
+        unset($_ENV[$key], $_SERVER[$key]);
+        if (function_exists('putenv')) {
+            @putenv($key);
+        }
+    }
+}
+
 // Auto-eliminación segura tras completar instalación
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'self_destruct') {
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && ($_POST['action'] ?? '') === 'self_destruct') {
     $token = (string) ($_POST['cleanup_token'] ?? '');
     if (
         isset($_SESSION['install_cleanup_token']) &&
         hash_equals((string) $_SESSION['install_cleanup_token'], $token)
     ) {
         @unlink(__FILE__);
-        header('Location: /');
+        header('Location: '.$storeUrl);
         exit;
     }
 }
@@ -74,7 +96,7 @@ if (file_exists($lockFile) && empty($_SESSION['install_just_completed'])) {
             <h1>El instalador está bloqueado por seguridad</h1>
             <p>MiPromo ya se encuentra instalado en este servidor (<code>storage/installed.lock</code>).</p>
             <p>Por seguridad en producción, elimina el archivo <strong>public/install.php</strong> desde el Administrador de Archivos de cPanel (BanaHosting).</p>
-            <p><a href="/" style="color:#1d70b8;font-weight:700">Ir a la Tienda MiPromo →</a></p>
+            <p><a href="<?= h($storeUrl) ?>" style="color:#1d70b8;font-weight:700">Ir a la Tienda MiPromo →</a></p>
         </div>
     </body>
     </html>
@@ -82,9 +104,25 @@ if (file_exists($lockFile) && empty($_SESSION['install_just_completed'])) {
     exit;
 }
 
+// Preparar subcarpetas requeridas de Laravel si un ZIP las omitió
+foreach ([
+    $baseDir.'/storage/app',
+    $baseDir.'/storage/app/public',
+    $baseDir.'/storage/app/backups',
+    $baseDir.'/storage/framework/cache/data',
+    $baseDir.'/storage/framework/sessions',
+    $baseDir.'/storage/framework/views',
+    $baseDir.'/storage/logs',
+    $baseDir.'/bootstrap/cache',
+] as $dir) {
+    if (! is_dir($dir)) {
+        @mkdir($dir, 0755, true);
+    }
+}
+
 $scheme = (! empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https') ? 'https' : 'http';
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-$detectedUrl = $scheme.'://'.$host;
+$detectedUrl = rtrim($scheme.'://'.$host.($appBaseHref === '' ? '' : $appBaseHref), '/');
 
 $checks = [
     'php_version' => [
@@ -100,8 +138,13 @@ $checks = [
         'ok' => file_exists($baseDir.'/public/build/manifest.json'),
     ],
     'storage_writable' => [
-        'label' => 'Permisos de escritura en storage/, storage/app/ y bootstrap/cache/',
-        'ok' => is_writable($baseDir.'/storage') && is_writable($baseDir.'/storage/app') && is_writable($baseDir.'/bootstrap/cache'),
+        'label' => 'Permisos de escritura en storage/, framework/, logs/ y bootstrap/cache/',
+        'ok' => is_writable($baseDir.'/storage')
+            && is_writable($baseDir.'/storage/app')
+            && is_writable($baseDir.'/storage/framework/views')
+            && is_writable($baseDir.'/storage/framework/sessions')
+            && is_writable($baseDir.'/storage/logs')
+            && is_writable($baseDir.'/bootstrap/cache'),
     ],
     'root_writable' => [
         'label' => 'Permisos para escribir archivo .env en raíz',
@@ -120,43 +163,48 @@ $allChecksPassed = ! in_array(false, array_column($checks, 'ok'), true);
 
 $errors = [];
 $dbTestMessage = null;
+$warnings = [];
 $installedSuccess = false;
 $cleanupToken = $_SESSION['install_cleanup_token'] ?? bin2hex(random_bytes(16));
 $_SESSION['install_cleanup_token'] = $cleanupToken;
 
 $form = [
-    'app_name' => $_POST['app_name'] ?? 'MiPromo Egresados Store',
-    'app_url' => $_POST['app_url'] ?? $detectedUrl,
-    'db_host' => $_POST['db_host'] ?? 'localhost',
-    'db_port' => $_POST['db_port'] ?? '3306',
-    'db_database' => $_POST['db_database'] ?? '',
-    'db_username' => $_POST['db_username'] ?? '',
-    'db_password' => $_POST['db_password'] ?? '',
-    'mail_host' => $_POST['mail_host'] ?? 'localhost',
-    'mail_port' => $_POST['mail_port'] ?? '465',
-    'mail_username' => $_POST['mail_username'] ?? '',
-    'mail_password' => $_POST['mail_password'] ?? '',
-    'mail_from_address' => $_POST['mail_from_address'] ?? '',
-    'admin_name' => $_POST['admin_name'] ?? 'Julio Moreno (Grupo JMSPERU)',
-    'admin_email' => $_POST['admin_email'] ?? 'admin@jmsperu.pe',
-    'admin_phone' => $_POST['admin_phone'] ?? '959199368',
-    'apiperu_token' => $_POST['apiperu_token'] ?? '',
-    'apiperu_endpoint' => $_POST['apiperu_endpoint'] ?? 'https://api.apiperu.dev/dni',
-    'seed_mode' => $_POST['seed_mode'] ?? 'production',
+    'app_name' => (string) ($_POST['app_name'] ?? 'MiPromo Egresados Store'),
+    'app_url' => (string) ($_POST['app_url'] ?? $detectedUrl),
+    'db_host' => (string) ($_POST['db_host'] ?? 'localhost'),
+    'db_port' => (string) ($_POST['db_port'] ?? '3306'),
+    'db_database' => (string) ($_POST['db_database'] ?? ''),
+    'db_username' => (string) ($_POST['db_username'] ?? ''),
+    'db_password' => (string) ($_POST['db_password'] ?? ''),
+    'mail_host' => (string) ($_POST['mail_host'] ?? 'localhost'),
+    'mail_port' => (string) ($_POST['mail_port'] ?? '465'),
+    'mail_username' => (string) ($_POST['mail_username'] ?? ''),
+    'mail_password' => (string) ($_POST['mail_password'] ?? ''),
+    'mail_from_address' => (string) ($_POST['mail_from_address'] ?? ''),
+    'admin_name' => (string) ($_POST['admin_name'] ?? 'Julio Moreno (Grupo JMSPERU)'),
+    'admin_email' => (string) ($_POST['admin_email'] ?? 'admin@jmsperu.pe'),
+    'admin_phone' => (string) ($_POST['admin_phone'] ?? '959199368'),
+    'apiperu_token' => (string) ($_POST['apiperu_token'] ?? ''),
+    'apiperu_endpoint' => (string) ($_POST['apiperu_endpoint'] ?? 'https://api.apiperu.dev/dni'),
+    'seed_mode' => (string) ($_POST['seed_mode'] ?? 'production'),
 ];
 
 if (! in_array($form['seed_mode'], ['production', 'demo', 'blank'], true)) {
     $form['seed_mode'] = 'production';
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     $action = (string) ($_POST['action'] ?? 'install');
 
     if ($action === 'test_db') {
         try {
             $dsn = sprintf('mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4', $form['db_host'], $form['db_port'], $form['db_database']);
-            new PDO($dsn, $form['db_username'], $form['db_password'], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-            $dbTestMessage = 'Conexión MySQL exitosa con la base de datos en BanaHosting.';
+            $pdo = new PDO($dsn, $form['db_username'], $form['db_password'], [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
+            ]);
+            $serverVer = (string) $pdo->getAttribute(PDO::ATTR_SERVER_VERSION);
+            $dbTestMessage = "Conexión MySQL exitosa ({$serverVer}) con la base de datos {$form['db_database']}.";
         } catch (Throwable $e) {
             $errors[] = 'No se pudo conectar a MySQL: '.$e->getMessage();
         }
@@ -184,10 +232,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errors[] = 'El correo del Superadmin no es válido.';
         }
 
+        if (! filter_var($form['apiperu_endpoint'], FILTER_VALIDATE_URL)) {
+            $errors[] = 'El endpoint de apiperu.dev debe ser una URL válida (ej. https://api.apiperu.dev/dni).';
+        }
+
         if ($errors === []) {
             try {
                 $dsn = sprintf('mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4', $form['db_host'], $form['db_port'], $form['db_database']);
-                new PDO($dsn, $form['db_username'], $form['db_password'], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+                new PDO($dsn, $form['db_username'], $form['db_password'], [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4',
+                ]);
             } catch (Throwable $e) {
                 $errors[] = 'Error de conexión MySQL: '.$e->getMessage();
             }
@@ -195,16 +250,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($errors === []) {
             $appKey = 'base64:'.base64_encode(random_bytes(32));
-            $isHttps = str_starts_with(strtolower($form['app_url']), 'https://');
+            $normalizedUrl = rtrim(trim($form['app_url']), '/');
+            $isHttps = str_starts_with(strtolower($normalizedUrl), 'https://');
             $mailer = trim($form['mail_username']) !== '' ? 'smtp' : 'log';
             $fromEmail = trim($form['mail_from_address']) !== '' ? $form['mail_from_address'] : $form['admin_email'];
+            $cleanEndpoint = trim($form['apiperu_endpoint']) ?: 'https://api.apiperu.dev/dni';
 
             $envContent = implode("\n", [
                 'APP_NAME='.envEscape($form['app_name']),
                 'APP_ENV=production',
                 'APP_KEY='.$appKey,
                 'APP_DEBUG=false',
-                'APP_URL='.rtrim($form['app_url'], '/'),
+                'APP_URL='.envEscape($normalizedUrl),
                 '',
                 'APP_LOCALE=es',
                 'APP_FALLBACK_LOCALE=es',
@@ -226,6 +283,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'SESSION_DRIVER=database',
                 'SESSION_LIFETIME=120',
                 'SESSION_ENCRYPT=true',
+                'SESSION_SAME_SITE=lax',
                 'SESSION_SECURE_COOKIE='.($isHttps ? 'true' : 'false'),
                 'QUEUE_CONNECTION=database',
                 'CACHE_STORE=database',
@@ -239,7 +297,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'MAIL_FROM_ADDRESS='.envEscape($fromEmail),
                 'MAIL_FROM_NAME="${APP_NAME}"',
                 '',
-                'APIPERU_ENDPOINT='.envEscape(trim($form['apiperu_endpoint']) ?: 'https://api.apiperu.dev/dni'),
+                'APIPERU_ENDPOINT='.envEscape($cleanEndpoint),
                 'APIPERU_TOKEN=',
                 '',
                 'VITE_APP_NAME="${APP_NAME}"',
@@ -253,7 +311,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($errors === []) {
             try {
-                // Limpiar caché previa y quitar public/hot si existiera
+                // Limpiar caché previa, archivo public/hot y symlinks rotos de desarrollo
                 if (file_exists($baseDir.'/public/hot')) {
                     @unlink($baseDir.'/public/hot');
                 }
@@ -263,12 +321,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
 
+                $publicStorage = $baseDir.'/public/storage';
+                if (is_link($publicStorage)) {
+                    @unlink($publicStorage);
+                }
+
+                clearPreloadedEnv([
+                    'APP_NAME', 'APP_ENV', 'APP_KEY', 'APP_DEBUG', 'APP_URL',
+                    'DB_CONNECTION', 'DB_HOST', 'DB_PORT', 'DB_DATABASE', 'DB_USERNAME', 'DB_PASSWORD',
+                    'CACHE_STORE', 'SESSION_DRIVER', 'SESSION_ENCRYPT', 'SESSION_SECURE_COOKIE',
+                    'APIPERU_ENDPOINT', 'APIPERU_TOKEN',
+                ]);
+
                 require $baseDir.'/vendor/autoload.php';
                 $app = require $baseDir.'/bootstrap/app.php';
                 $kernel = $app->make(Kernel::class);
                 $kernel->bootstrap();
 
                 Artisan::call('migrate:fresh', ['--force' => true]);
+                Cache::flush();
 
                 $adminEmail = strtolower(trim($form['admin_email']));
                 $adminPhone = preg_replace('/\D+/', '', trim($form['admin_phone'])) ?: '959199368';
@@ -313,9 +384,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
 
-                // Configurar parámetros iniciales y cifrar token apiperu.dev si fue provisto
+                // Configurar parámetros iniciales (caché de arrays planos, nunca objetos) y cifrar token apiperu.dev
                 SystemSetting::setValue('apiperu_enabled', '1', 'apiperu', false, 'Activa consulta DNI apiperu.dev');
-                SystemSetting::setValue('apiperu_endpoint', trim($form['apiperu_endpoint']) ?: 'https://api.apiperu.dev/dni', 'apiperu', false, 'Endpoint oficial apiperu.dev');
+                SystemSetting::setValue('apiperu_endpoint', $cleanEndpoint, 'apiperu', false, 'Endpoint oficial apiperu.dev');
                 SystemSetting::setValue('whatsapp_number', $adminPhone, 'general', false, 'WhatsApp oficial');
                 SystemSetting::setValue('support_email', $adminEmail, 'general', false, 'Correo oficial de soporte');
 
@@ -324,20 +395,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 try {
-                    if (! file_exists($baseDir.'/public/storage')) {
+                    if (! file_exists($publicStorage)) {
                         Artisan::call('storage:link');
                     }
                 } catch (Throwable) {
-                    // En algunos planes shared hosting symlink() puede estar deshabilitado.
+                    if (! is_dir($publicStorage) && ! @symlink($baseDir.'/storage/app/public', $publicStorage)) {
+                        $warnings[] = 'Tu plan de hosting bloquea symlink(): crea un enlace simbólico o carpeta compartida de storage/app/public a public/storage si subes comprobantes o fotos de álbum.';
+                    }
                 }
 
-                Artisan::call('config:cache');
-                Artisan::call('route:cache');
-                Artisan::call('view:cache');
+                Cache::flush();
+
+                try {
+                    Artisan::call('config:cache');
+                    Artisan::call('route:cache');
+                    Artisan::call('view:cache');
+                } catch (Throwable $cacheEx) {
+                    $warnings[] = 'No se pudo precompilar la caché de configuración/rutas (la app funcionará normalmente sin cachear): '.$cacheEx->getMessage();
+                }
 
                 file_put_contents($lockFile, json_encode([
                     'installed_at' => date('c'),
-                    'app_url' => rtrim($form['app_url'], '/'),
+                    'app_url' => $normalizedUrl,
                     'mode' => $form['seed_mode'],
                     'super_admin' => $superAdmin->email,
                 ], JSON_PRETTY_PRINT));
@@ -356,7 +435,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Instalador MiPromo v2 — Hosting BanaHosting cPanel</title>
+    <title>Instalador MiPromo v2.1 — Hosting BanaHosting cPanel</title>
     <style>
         *{box-sizing:border-box}
         body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f1f5f9;color:#0f2d4a;line-height:1.5}
@@ -374,6 +453,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .alert{padding:14px 16px;border-radius:12px;margin-top:16px;font-size:13px}
         .alert-err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
         .alert-ok{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46}
+        .alert-warn{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
         .btn{border:0;border-radius:12px;padding:12px 20px;font-size:13px;font-weight:800;cursor:pointer}
         .btn-primary{background:#1d70b8;color:#fff}
         .btn-dark{background:#0f2d4a;color:#fff}
@@ -386,9 +466,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="wrap">
     <div class="header">
         <div>
-            <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#fde047">Despliegue cPanel BanaHosting · v2.0</div>
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#fde047">Despliegue cPanel BanaHosting · v2.1</div>
             <h1>Instalador Web MiPromo Egresados Store</h1>
-            <p style="margin:6px 0 0;font-size:13px;opacity:.9">Configura MySQL, SMTP, Token API Perú (DNI), modo de datos y Superadmin real en minutos.</p>
+            <p style="margin:6px 0 0;font-size:13px;opacity:.9">Configura MySQL, SMTP, Endpoint &amp; Token API Perú (DNI), modo de datos y Superadmin real en minutos.</p>
         </div>
         <div style="background:#fff;padding:8px 14px;border-radius:14px">
             <strong style="color:#0f2d4a;font-size:14px">Grupo JMSPERU</strong>
@@ -406,6 +486,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     <?php } ?>
 
+    <?php if ($warnings !== []) { ?>
+        <div class="alert alert-warn">
+            <strong>Avisos de hosting:</strong>
+            <ul style="margin:6px 0 0 18px;padding:0">
+                <?php foreach ($warnings as $warn) { ?>
+                    <li><?= h($warn) ?></li>
+                <?php } ?>
+            </ul>
+        </div>
+    <?php } ?>
+
     <?php if ($dbTestMessage !== null) { ?>
         <div class="alert alert-ok">✓ <?= h($dbTestMessage) ?></div>
     <?php } ?>
@@ -413,7 +504,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php if ($installedSuccess) { ?>
         <div class="card">
             <h2 style="color:#047857;font-size:22px">✓ ¡MiPromo quedó instalado correctamente!</h2>
-            <p>Tu base de datos MySQL fue migrada en modo <strong><?= h($form['seed_mode']) ?></strong>, las cachés quedaron activas y tu cuenta <strong>Superadministrador (<?= h($form['admin_email']) ?>)</strong> ya puede ingresar.</p>
+            <p>Tu base de datos MySQL fue migrada en modo <strong><?= h($form['seed_mode']) ?></strong>, las cachés quedaron listas y tu cuenta <strong>Superadministrador (<?= h($form['admin_email']) ?>)</strong> ya puede ingresar.</p>
             <p><strong>Paso de seguridad obligatorio:</strong> elimina <code>public/install.php</code> ahora mismo haciendo clic en el botón rojo o desde cPanel.</p>
             <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:16px">
                 <form method="POST">
@@ -421,7 +512,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <input type="hidden" name="cleanup_token" value="<?= h($cleanupToken) ?>">
                     <button type="submit" class="btn btn-warn">Eliminar install.php e ir a la Tienda →</button>
                 </form>
-                <a href="/login" class="btn btn-dark" style="text-decoration:none">Iniciar Sesión como Superadmin →</a>
+                <a href="<?= h($loginUrl) ?>" class="btn btn-dark" style="text-decoration:none">Iniciar Sesión como Superadmin →</a>
             </div>
         </div>
     <?php } else { ?>
@@ -437,7 +528,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
 
-        <form method="POST" class="card" style="display:flex;flex-direction:column;gap:22px">
+        <form method="POST" class="card" style="display:flex;flex-direction:column;gap:22px" onsubmit="const btn=this.querySelector('[data-install-btn]'); if(btn && event.submitter===btn){ btn.disabled=true; btn.textContent='Instalando y migrando base de datos... por favor espera'; }">
             <div>
                 <h2>2. Dominio y Base de Datos MySQL (cPanel)</h2>
                 <div class="grid">
@@ -497,6 +588,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div>
                         <label>Correo remitente</label>
                         <input type="email" name="mail_from_address" value="<?= h($form['mail_from_address']) ?>" placeholder="noreply@tudominio.com">
+                    </div>
+                    <div>
+                        <label>URL Endpoint DNI apiperu.dev</label>
+                        <input type="url" name="apiperu_endpoint" value="<?= h($form['apiperu_endpoint']) ?>">
                     </div>
                     <div>
                         <label>Token Bearer apiperu.dev (opcional — configurable luego)</label>
@@ -559,7 +654,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <div>
-                <button type="submit" name="action" value="install" class="btn btn-primary" style="width:100%;font-size:15px;padding:14px">
+                <button type="submit" name="action" value="install" data-install-btn class="btn btn-primary" style="width:100%;font-size:15px;padding:14px">
                     Instalar MiPromo en Producción Ahora →
                 </button>
             </div>

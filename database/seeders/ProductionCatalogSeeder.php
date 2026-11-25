@@ -12,6 +12,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\PromotionalBanner;
 use App\Models\ShippingZone;
+use App\Models\SystemSetting;
 use App\Models\User;
 use App\Models\Vendor;
 use Illuminate\Database\Seeder;
@@ -243,5 +244,18 @@ class ProductionCatalogSeeder extends Seeder
             'is_published' => true,
             'published_at' => now(),
         ]);
+
+        SystemSetting::firstOrCreate(
+            ['key' => 'apiperu_enabled'],
+            ['group' => 'apiperu', 'value' => '1', 'is_encrypted' => false, 'description' => 'Activa o desactiva las consultas DNI a apiperu.dev.']
+        );
+        SystemSetting::firstOrCreate(
+            ['key' => 'apiperu_endpoint'],
+            ['group' => 'apiperu', 'value' => 'https://api.apiperu.dev/dni', 'is_encrypted' => false, 'description' => 'Endpoint oficial REST de apiperu.dev para consultas RENIEC.']
+        );
+        SystemSetting::firstOrCreate(
+            ['key' => 'whatsapp_number'],
+            ['group' => 'general', 'value' => '51959199368', 'is_encrypted' => false, 'description' => 'Número oficial de WhatsApp comercial Grupo JMSPERU.']
+        );
     }
 }

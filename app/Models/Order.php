@@ -114,4 +114,16 @@ class Order extends Model
             default => ucfirst($this->order_status),
         };
     }
+
+    public static function generateUniqueOrderNumber(string $prefix = 'PED'): string
+    {
+        $seq = ((int) self::max('id')) + 1;
+
+        do {
+            $candidate = sprintf('%s-%s-%04d', $prefix, now()->format('Y'), $seq);
+            $seq++;
+        } while (self::where('order_number', $candidate)->exists());
+
+        return $candidate;
+    }
 }

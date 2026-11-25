@@ -23,10 +23,11 @@ class AdminOperationsController extends Controller
     public function orders(Request $request): View
     {
         $user = $request->user();
-        $query = Order::query()
-            ->with(['institution', 'payments', 'invoice', 'items', 'shippingZone', 'returnRequests'])
-            ->when($user->isRole('institution_admin', 'promotion_delegate') && $user->institution_id, fn ($q) => $q->where('institution_id', $user->institution_id))
-            ->when($user->isRole('vendor') && $user->vendor, fn ($q) => $q->whereHas('items', fn ($iq) => $iq->where('vendor_id', $user->vendor->id)));
+        $scopedInstitutionId = $user->isRole('institution_admin', 'promotion_delegate', 'classroom_delegate') ? $user->institution_id : null;
+        $scopedVendorId = ($user->isRole('vendor') && $user->vendor) ? $user->vendor->id : null;
+
+        $query = $this->scopedOrdersQuery($request)
+            ->with(['institution', 'payments', 'invoice', 'items', 'shippingZone', 'returnRequests']);
 
         if ($search = trim((string) $request->string('q'))) {
             $query->where(function ($q) use ($search): void {
@@ -49,10 +50,21 @@ class AdminOperationsController extends Controller
 
         $returnRequests = ReturnRequest::with(['order', 'user'])
             ->where('status', 'pending')
+            ->when($scopedInstitutionId, fn ($q) => $q->whereHas('order', fn ($oq) => $oq->where('institution_id', $scopedInstitutionId)))
+            ->when($scopedVendorId, fn ($q) => $q->whereHas('order.items', fn ($iq) => $iq->where('vendor_id', $scopedVendorId)))
             ->latest()
             ->get();
 
         return view('admin.operations.orders', compact('orders', 'returnRequests'));
+    }
+
+    private function scopedOrdersQuery(Request $request)
+    {
+        $user = $request->user();
+
+        return Order::query()
+            ->when($user->isRole('institution_admin', 'promotion_delegate', 'classroom_delegate') && $user->institution_id, fn ($q) => $q->where('institution_id', $user->institution_id))
+            ->when($user->isRole('vendor') && $user->vendor, fn ($q) => $q->whereHas('items', fn ($iq) => $iq->where('vendor_id', $user->vendor->id)));
     }
 
     public function verifyPayment(Request $request, Payment $payment): RedirectResponse
@@ -114,9 +126,9 @@ class AdminOperationsController extends Controller
         return back()->with('success', "Estado logístico de {$order->order_number} actualizado.");
     }
 
-    public function exportOrdersCsv(): StreamedResponse
+    public function exportOrdersCsv(Request $request): StreamedResponse
     {
-        $orders = Order::with(['institution', 'invoice'])->latest()->get();
+        $orders = $this->scopedOrdersQuery($request)->with(['institution', 'invoice'])->latest()->get();
 
         return response()->streamDownload(function () use ($orders): void {
             $handle = fopen('php://output', 'w');

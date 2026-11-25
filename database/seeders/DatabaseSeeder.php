@@ -1592,7 +1592,7 @@ class DatabaseSeeder extends Seeder
                 'payment_status' => 'verified',
                 'order_status' => 'delivered',
                 'days_ago' => 14,
-                'payment_method' => 'transfer',
+                'payment_method' => 'bank_transfer',
                 'payment_ref' => 'BCP-2026-99124',
                 'payment_notes' => 'Transferencia BCP conciliada.',
                 'invoice_type' => 'boleta',
@@ -1642,7 +1642,7 @@ class DatabaseSeeder extends Seeder
                 'payment_status' => 'verified',
                 'order_status' => 'in_production',
                 'days_ago' => 6,
-                'payment_method' => 'card',
+                'payment_method' => 'card_culqi',
                 'payment_ref' => 'CARD-884192',
                 'payment_notes' => 'Pago confirmado en pasarela.',
                 'invoice_type' => 'factura',
@@ -1668,7 +1668,7 @@ class DatabaseSeeder extends Seeder
                 'payment_status' => 'verified',
                 'order_status' => 'confirmed',
                 'days_ago' => 4,
-                'payment_method' => 'transfer',
+                'payment_method' => 'bank_transfer',
                 'payment_ref' => 'BBVA-441008',
                 'payment_notes' => 'Consolidado delegación Promoción 2006.',
                 'invoice_type' => 'boleta',
@@ -1767,7 +1767,7 @@ class DatabaseSeeder extends Seeder
                 'payment_status' => 'rejected',
                 'order_status' => 'cancelled',
                 'days_ago' => 8,
-                'payment_method' => 'transfer',
+                'payment_method' => 'bank_transfer',
                 'payment_ref' => 'ERR-40412',
                 'payment_notes' => 'Referencia bancaria duplicada o incompleta.',
                 'invoice_type' => null,
@@ -2099,7 +2099,7 @@ class DatabaseSeeder extends Seeder
         );
         SystemSetting::firstOrCreate(
             ['key' => 'apiperu_endpoint'],
-            ['group' => 'apiperu', 'value' => 'https://apiperu.dev/api/dni', 'is_encrypted' => false, 'description' => 'Endpoint oficial REST de apiperu.dev para consultas RENIEC.']
+            ['group' => 'apiperu', 'value' => 'https://api.apiperu.dev/dni', 'is_encrypted' => false, 'description' => 'Endpoint oficial REST de apiperu.dev para consultas RENIEC.']
         );
         SystemSetting::firstOrCreate(
             ['key' => 'whatsapp_number'],

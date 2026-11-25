@@ -89,8 +89,7 @@ class CampaignController extends Controller
             $isCard = $validated['payment_method'] === 'card_culqi';
             $isPartial = $amountPaid < $totalAmount;
 
-            $nextSeq = (int) Order::max('id') + 1;
-            $orderNumber = sprintf('CAM-%s-%04d', now()->format('Y'), $nextSeq);
+            $orderNumber = Order::generateUniqueOrderNumber('CAM');
 
             $commission = round($totalAmount * ((float) $campaign->institution->commission_rate / 100), 2);
 

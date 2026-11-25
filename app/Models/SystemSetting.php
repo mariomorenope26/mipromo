@@ -35,18 +35,38 @@ class SystemSetting extends Model
             return $default;
         }
 
-        $row = Cache::remember("sys_setting_{$key}", 300, fn () => self::where('key', $key)->first());
+        $cacheKey = self::cacheKey($key);
+        $cached = Cache::get($cacheKey);
 
-        if (! $row || $row->value === null || $row->value === '') {
+        // Guard against legacy serialized objects or missing entries when serializable_classes=false
+        if (! is_array($cached) || ! array_key_exists('exists', $cached)) {
+            $row = self::where('key', $key)->first();
+            $cached = $row
+                ? [
+                    'exists' => true,
+                    'value' => $row->value,
+                    'is_encrypted' => (bool) $row->is_encrypted,
+                ]
+                : ['exists' => false];
+
+            Cache::put($cacheKey, $cached, 300);
+        }
+
+        if (! ($cached['exists'] ?? false)) {
             return $default;
         }
 
-        if (! $row->is_encrypted) {
-            return $row->value;
+        $rawValue = $cached['value'] ?? null;
+        if ($rawValue === null || $rawValue === '') {
+            return $default;
+        }
+
+        if (! ($cached['is_encrypted'] ?? false)) {
+            return (string) $rawValue;
         }
 
         try {
-            return Crypt::decryptString($row->value);
+            return Crypt::decryptString((string) $rawValue);
         } catch (Throwable) {
             return $default;
         }
@@ -74,9 +94,15 @@ class SystemSetting extends Model
             ]
         );
 
+        Cache::forget(self::cacheKey($key));
         Cache::forget("sys_setting_{$key}");
 
         return $setting;
+    }
+
+    private static function cacheKey(string $key): string
+    {
+        return "sys_cfg_v2_{$key}";
     }
 
     public static function hasNonEmptyValue(string $key): bool

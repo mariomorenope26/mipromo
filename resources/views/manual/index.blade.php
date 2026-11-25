@@ -213,7 +213,9 @@
                 <button type="button" @click="lightboxSrc = null" class="px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-bold">Cerrar ✕</button>
             </div>
             <div class="p-2 bg-slate-100 max-h-[82vh] overflow-auto">
-                <img :src="lightboxSrc" alt="Vista ampliada" class="w-full h-auto rounded-lg">
+                <template x-if="lightboxSrc">
+                    <img :src="lightboxSrc" alt="Vista ampliada" class="w-full h-auto rounded-lg">
+                </template>
             </div>
         </div>
     </div>

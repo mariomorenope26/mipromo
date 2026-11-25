@@ -56,6 +56,11 @@ class AlumniDirectoryController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $cleanDni = preg_replace('/\D+/', '', trim((string) $request->input('dni', '')));
+        if ($cleanDni !== '') {
+            $request->merge(['dni' => $cleanDni]);
+        }
+
         $validated = $request->validate([
             'institution_id' => ['required', 'exists:institutions,id'],
             'full_name' => ['required', 'string', 'max:150'],
