@@ -15,6 +15,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 
 class AdminAcademicController extends Controller
@@ -117,13 +118,18 @@ class AdminAcademicController extends Controller
             ? 'in:institution_admin,promotion_delegate,classroom_delegate'
             : 'in:promotion_delegate,classroom_delegate';
 
+        $request->merge([
+            'email' => strtolower(trim((string) $request->input('email', ''))),
+            'dni' => preg_replace('/\D+/', '', trim((string) $request->input('dni', ''))) ?: null,
+        ]);
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:150'],
             'email' => ['required', 'email', 'max:150', 'unique:users,email'],
             'role' => ['required', $allowedRoles],
             'phone' => ['nullable', 'string', 'max:30'],
             'dni' => ['nullable', 'string', 'max:20'],
-            'password' => ['nullable', 'string', 'min:8'],
+            'password' => ['nullable', 'string', Password::min(8)->letters()->numbers()],
         ]);
 
         $delegate = User::create([

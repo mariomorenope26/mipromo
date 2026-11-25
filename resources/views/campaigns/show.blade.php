@@ -138,6 +138,9 @@
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">N.° de operación (si aplica Yape/Plin)</label>
                         <input type="text" name="reference_code" placeholder="Ej. YAPE-123456" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm">
+                        <a href="https://wa.me/51959199368?text={{ urlencode('Hola Grupo JMSPERU, envío constancia Yape/Plin para la campaña: '.$campaign->title) }}" target="_blank" rel="noopener noreferrer" class="inline-block mt-1.5 text-xs font-bold text-emerald-700 hover:underline">
+                            💬 Enviar constancia Yape/Plin por WhatsApp (959199368) ↗
+                        </a>
                     </div>
 
                     <button type="submit" class="w-full py-3.5 rounded-xl bg-[#1D70B8] hover:bg-[#0F2D4A] text-white font-extrabold text-sm transition">

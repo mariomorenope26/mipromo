@@ -5,6 +5,27 @@
 
 @section('content')
 <div class="space-y-5">
+    <form method="GET" action="{{ route('admin.orders.index') }}" class="bg-white rounded-2xl border border-slate-200 p-4 flex flex-wrap items-center gap-2.5 text-xs">
+        <input type="text" name="q" value="{{ request('q') }}" placeholder="Buscar pedido (PED-...), cliente, DNI/RUC o correo..." class="flex-1 min-w-56 px-3.5 py-2 rounded-xl border border-slate-300">
+        <select name="pago" class="px-3 py-2 rounded-xl border border-slate-300 bg-white">
+            <option value="">Todos los pagos</option>
+            <option value="pending" @selected(request('pago') === 'pending')>Pago pendiente</option>
+            <option value="verified" @selected(request('pago') === 'verified')>Pago verificado</option>
+            <option value="partial" @selected(request('pago') === 'partial')>Adelanto parcial</option>
+            <option value="rejected" @selected(request('pago') === 'rejected')>Pago rechazado</option>
+        </select>
+        <select name="estado" class="px-3 py-2 rounded-xl border border-slate-300 bg-white">
+            <option value="">Todos los estados</option>
+            <option value="pending" @selected(request('estado') === 'pending')>Pendiente</option>
+            <option value="confirmed" @selected(request('estado') === 'confirmed')>Confirmado</option>
+            <option value="in_production" @selected(request('estado') === 'in_production')>En producción</option>
+            <option value="shipped" @selected(request('estado') === 'shipped')>Enviado</option>
+            <option value="delivered" @selected(request('estado') === 'delivered')>Entregado</option>
+        </select>
+        <button type="submit" class="px-4 py-2 rounded-xl bg-[#0F2D4A] hover:bg-[#1D70B8] text-white font-bold">Buscar</button>
+        <a href="{{ route('admin.orders.index') }}" class="px-3 py-2 rounded-xl border border-slate-300 text-slate-600">Limpiar</a>
+    </form>
+
     @if(isset($returnRequests) && $returnRequests->isNotEmpty())
         <div class="bg-amber-50 border border-amber-200 rounded-2xl p-5 space-y-3">
             <h2 class="font-extrabold text-amber-900 text-sm">Solicitudes de Cambio o Devolución Pendientes ({{ $returnRequests->count() }})</h2>

@@ -23,12 +23,29 @@ class AdminOperationsController extends Controller
     public function orders(Request $request): View
     {
         $user = $request->user();
-        $orders = Order::query()
+        $query = Order::query()
             ->with(['institution', 'payments', 'invoice', 'items', 'shippingZone', 'returnRequests'])
             ->when($user->isRole('institution_admin', 'promotion_delegate') && $user->institution_id, fn ($q) => $q->where('institution_id', $user->institution_id))
-            ->when($user->isRole('vendor') && $user->vendor, fn ($q) => $q->whereHas('items', fn ($iq) => $iq->where('vendor_id', $user->vendor->id)))
-            ->latest()
-            ->paginate(15);
+            ->when($user->isRole('vendor') && $user->vendor, fn ($q) => $q->whereHas('items', fn ($iq) => $iq->where('vendor_id', $user->vendor->id)));
+
+        if ($search = trim((string) $request->string('q'))) {
+            $query->where(function ($q) use ($search): void {
+                $q->where('order_number', 'like', "%{$search}%")
+                    ->orWhere('customer_name', 'like', "%{$search}%")
+                    ->orWhere('customer_dni_ruc', 'like', "%{$search}%")
+                    ->orWhere('customer_email', 'like', "%{$search}%");
+            });
+        }
+
+        if ($orderStatus = $request->string('estado')->toString()) {
+            $query->where('order_status', $orderStatus);
+        }
+
+        if ($paymentStatus = $request->string('pago')->toString()) {
+            $query->where('payment_status', $paymentStatus);
+        }
+
+        $orders = $query->latest()->paginate(15)->withQueryString();
 
         $returnRequests = ReturnRequest::with(['order', 'user'])
             ->where('status', 'pending')

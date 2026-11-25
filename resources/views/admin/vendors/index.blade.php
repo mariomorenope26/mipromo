@@ -86,6 +86,10 @@
                 <label class="block font-bold text-slate-700 mb-1">Correo acceso Panel (opcional)</label>
                 <input type="email" name="owner_email" placeholder="acceso@taller.pe" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm">
             </div>
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Clave Panel (opcional, mín. 8)</label>
+                <input type="password" name="owner_password" minlength="8" placeholder="O aleatoria segura de 16 chars" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm">
+            </div>
 
             <div>
                 <label class="block font-bold text-slate-700 mb-1">Ciudad *</label>

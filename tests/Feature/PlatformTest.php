@@ -876,3 +876,40 @@ it('configures encrypted apiperu.dev token, queries and registers clients/alumni
     expect($pdfResponse->headers->get('content-type'))->toContain('application/pdf');
     expect(str_starts_with((string) $pdfResponse->getContent(), '%PDF-'))->toBeTrue();
 });
+
+it('executes every storefront and backoffice search method cleanly and never creates vendor accounts with weak default password', function () {
+    $superAdmin = User::where('role', UserRole::SuperAdmin->value)->firstOrFail();
+
+    // Búsquedas públicas
+    $this->get('/?q=Anillo')->assertOk()->assertSee('Anillo de Promoción');
+    $this->get('/tienda?q=Medalla&verificado=1')->assertOk()->assertSee('Medalla Conmemorativa');
+    $this->get('/tienda?categoria=mochilas-brindis&orden=precio_asc')->assertOk()->assertSee('Copa de Cristal');
+    $this->get('/instituciones?q=Guadalupe')->assertOk()->assertSee('Guadalupe');
+    $this->get('/instituciones?ciudad=Piura')->assertOk()->assertSee('Salesiano');
+    $this->get('/campanas?colegio=guadalupe-lima')->assertOk();
+    $this->get('/comunidades?q=Guadalupe')->assertOk()->assertSee('Guadalupe');
+    $this->get('/egresados?q=44556677')->assertOk()->assertSee('Marco Quispe');
+    $this->get('/seguimiento?codigo=PED-2026-0001')->assertOk()->assertSee('PED-2026-0001');
+    $this->get('/libro-de-reclamaciones?codigo=LRV-2026-0001')->assertOk();
+
+    // Búsquedas administrativas
+    $this->actingAs($superAdmin)->get('/admin/catalogo?q=ANILLO&verified_only=1')->assertOk()->assertSee('Anillo');
+    $this->actingAs($superAdmin)->get('/admin/proveedores?q=Gamarra&verificado=1')->assertOk()->assertSee('Textil Gamarra');
+    $this->actingAs($superAdmin)->get('/admin/pedidos?q=PED-2026-0001')->assertOk()->assertSee('PED-2026-0001');
+    $this->actingAs($superAdmin)->get('/admin/egresados?q=44556677')->assertOk()->assertSee('Marco Quispe');
+    $this->actingAs($superAdmin)->get('/admin/usuarios?q=42158963')->assertOk()->assertSee('Julio Moreno');
+
+    // Alta de proveedor con cuenta nueva nunca usa 'password' por defecto
+    $this->actingAs($superAdmin)->post(route('admin.vendors.store'), [
+        'business_name' => 'Orfebrería Lima SAC',
+        'ruc' => '20609988776',
+        'city' => 'Lima',
+        'phone' => '999555444',
+        'commission_rate' => 12,
+        'owner_email' => 'orfebre@example.pe',
+        'is_verified' => '1',
+    ])->assertRedirect();
+
+    $vendorOwner = User::where('email', 'orfebre@example.pe')->firstOrFail();
+    expect(Hash::check('password', $vendorOwner->password))->toBeFalse();
+});

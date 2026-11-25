@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -83,6 +84,12 @@ class AdminVendorController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        if ($request->filled('owner_email')) {
+            $request->merge([
+                'owner_email' => strtolower(trim((string) $request->input('owner_email'))),
+            ]);
+        }
+
         $validated = $request->validate([
             'business_name' => ['required', 'string', 'max:180'],
             'trade_name' => ['nullable', 'string', 'max:180'],
@@ -102,14 +109,19 @@ class AdminVendorController extends Controller
             'description' => ['nullable', 'string', 'max:500'],
             'internal_notes' => ['nullable', 'string', 'max:1000'],
             'owner_email' => ['nullable', 'email', 'unique:users,email'],
+            'owner_password' => ['nullable', 'string', Password::min(8)->letters()->numbers()],
         ]);
 
         $userId = null;
         if (! empty($validated['owner_email'])) {
+            $ownerPassword = ! empty($validated['owner_password'])
+                ? $validated['owner_password']
+                : Str::random(16);
+
             $user = User::create([
-                'name' => $validated['contact_name'] ?: $validated['business_name'],
+                'name' => ($validated['contact_name'] ?? null) ?: $validated['business_name'],
                 'email' => $validated['owner_email'],
-                'password' => Hash::make('password'),
+                'password' => Hash::make($ownerPassword),
                 'role' => UserRole::Vendor->value,
                 'phone' => $validated['phone'],
                 'city' => $validated['city'],
