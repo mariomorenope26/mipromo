@@ -20,6 +20,7 @@
 /public/storage
 /storage/*.key
 /storage/installed.lock
+/storage/app/backups
 /storage/pail
 /public/images/products/uploads
 /vendor

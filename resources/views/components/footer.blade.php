@@ -32,8 +32,10 @@
                 <h3 class="text-xs font-bold uppercase tracking-wider text-sky-300 mb-3">Legal y Soporte</h3>
                 <ul class="space-y-2 text-sm text-slate-300">
                     <li><a href="{{ route('orders.track') }}" class="hover:text-white">Seguimiento de Pedidos</a></li>
-                    <li><a href="{{ route('manual.index') }}" class="hover:text-white font-semibold text-sky-200">Manual de Uso en Línea</a></li>
-                    <li><a href="{{ route('manual.pdf') }}" class="hover:text-white">Descargar Manual en PDF ↓</a></li>
+                    @auth
+                        <li><a href="{{ route('manual.index') }}" class="hover:text-white font-semibold text-sky-200">Manual de Uso en Línea</a></li>
+                        <li><a href="{{ route('manual.pdf') }}" class="hover:text-white">Descargar Manual en PDF ↓</a></li>
+                    @endauth
                     <li><a href="{{ route('legal.privacy') }}" class="hover:text-white">Privacidad (Ley N.° 29733)</a></li>
                     <li><a href="{{ route('legal.terms') }}" class="hover:text-white">Términos y Devoluciones</a></li>
                     <li><a href="{{ route('legal.complaints') }}" class="hover:text-white font-semibold text-amber-300">Libro de Reclamaciones Virtual</a></li>

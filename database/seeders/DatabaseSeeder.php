@@ -23,6 +23,7 @@ use App\Models\CommunityPoll;
 use App\Models\CommunityPollOption;
 use App\Models\CommunityPost;
 use App\Models\Complaint;
+use App\Models\ContentReport;
 use App\Models\Coupon;
 use App\Models\Institution;
 use App\Models\MessageTemplate;
@@ -34,7 +35,9 @@ use App\Models\ProductReview;
 use App\Models\ProductVariant;
 use App\Models\Promotion;
 use App\Models\PromotionalBanner;
+use App\Models\ReturnRequest;
 use App\Models\ShippingZone;
+use App\Models\SystemSetting;
 use App\Models\User;
 use App\Models\UserNotification;
 use App\Models\Vendor;
@@ -524,6 +527,19 @@ class DatabaseSeeder extends Seeder
             'privacy_consent_at' => now(),
         ]);
 
+        $vendorSouvenirsUser = User::create([
+            'name' => 'Grabados & Joyería JMS Lima',
+            'email' => 'vendedor.joyas@jmsperu.pe',
+            'password' => $password,
+            'role' => UserRole::Vendor->value,
+            'phone' => '959199368',
+            'dni' => '42119988',
+            'city' => 'Lima',
+            'referral_code' => 'JOYAS01',
+            'is_active' => true,
+            'privacy_consent_at' => now(),
+        ]);
+
         $alumniUser = User::create([
             'name' => 'Andrea Valdivia Toribio',
             'email' => 'egresado@jmsperu.pe',
@@ -539,12 +555,41 @@ class DatabaseSeeder extends Seeder
             'privacy_consent_at' => now(),
         ]);
 
+        $alumniPiuraUser = User::create([
+            'name' => 'Carlos Eduardo Seminario Rentería',
+            'email' => 'egresado.piura@jmsperu.pe',
+            'password' => $password,
+            'role' => UserRole::Alumni->value,
+            'institution_id' => $salesianoPiura->id,
+            'phone' => '969445511',
+            'dni' => '44118822',
+            'city' => 'Piura',
+            'referral_code' => 'PIURA06A',
+            'is_active' => true,
+            'privacy_consent_at' => now(),
+        ]);
+
+        $alumniTrujilloUser = User::create([
+            'name' => 'Valeria Cabanillas Rodríguez',
+            'email' => 'egresado.trujillo@jmsperu.pe',
+            'password' => $password,
+            'role' => UserRole::Alumni->value,
+            'institution_id' => $santaRosaTrujillo->id,
+            'phone' => '949887711',
+            'dni' => '47221199',
+            'city' => 'Trujillo',
+            'referral_code' => 'TRUJ11V',
+            'is_active' => true,
+            'privacy_consent_at' => now(),
+        ]);
+
         User::create([
             'name' => 'Sofía León (Soporte MiPromo)',
             'email' => 'moderador@jmsperu.pe',
             'password' => $password,
             'role' => UserRole::Moderator->value,
             'phone' => '959199368',
+            'dni' => '43551122',
             'city' => 'Lima',
             'referral_code' => 'MODJMS01',
             'is_active' => true,
@@ -560,6 +605,19 @@ class DatabaseSeeder extends Seeder
             'dni' => '46789012',
             'city' => 'Trujillo',
             'referral_code' => 'PEDROR01',
+            'is_active' => true,
+            'privacy_consent_at' => now(),
+        ]);
+
+        $buyerLimaUser = User::create([
+            'name' => 'Daniela Vásquez Núñez',
+            'email' => 'comprador2@jmsperu.pe',
+            'password' => $password,
+            'role' => UserRole::Buyer->value,
+            'phone' => '988776611',
+            'dni' => '48332211',
+            'city' => 'Chiclayo',
+            'referral_code' => 'DANIELA1',
             'is_active' => true,
             'privacy_consent_at' => now(),
         ]);
@@ -815,6 +873,21 @@ class DatabaseSeeder extends Seeder
             ['user_id' => $aulaDelegate->id, 'inst' => $ciencias->id, 'promo' => $promoC2016->id, 'aula' => $aulaC5A->id, 'name' => 'Marco Quispe Huamán', 'dni' => '44556677', 'entry' => 2012, 'grad' => 2016, 'city' => 'Cusco', 'phone' => '984112233', 'email' => 'aula@jmsperu.pe', 'prof' => 'Ingeniero de Software', 'comp' => 'Andes Tech', 'status' => 'verified'],
             ['user_id' => null, 'inst' => $independencia->id, 'promo' => $promoI2001->id, 'aula' => $aulaI5A->id, 'name' => 'Eduardo Polar Bustamante', 'dni' => '41122339', 'entry' => 1997, 'grad' => 2001, 'city' => 'Arequipa', 'phone' => '958123456', 'email' => 'epolar@example.pe', 'prof' => 'Ingeniero Civil', 'comp' => 'Constructora Misti', 'status' => 'verified'],
             ['user_id' => null, 'inst' => $sanjose->id, 'promo' => $promoSJ2010->id, 'aula' => null, 'name' => 'Diana Céspedes Mechán', 'dni' => '46123987', 'entry' => 2006, 'grad' => 2010, 'city' => 'Chiclayo', 'phone' => '979654321', 'email' => 'dcespedes@example.pe', 'prof' => 'Administradora de Empresas', 'comp' => 'AgroNorte SAC', 'status' => 'pending'],
+            ['user_id' => $alumniPiuraUser->id, 'inst' => $salesianoPiura->id, 'promo' => $promoPiura2006->id, 'aula' => null, 'name' => 'Carlos Eduardo Seminario Rentería', 'dni' => '44118822', 'entry' => 2002, 'grad' => 2006, 'city' => 'Piura', 'phone' => '969445511', 'email' => 'egresado.piura@jmsperu.pe', 'prof' => 'Ingeniero Civil', 'comp' => 'Constructora Norte Piura', 'status' => 'verified'],
+            ['user_id' => $alumniTrujilloUser->id, 'inst' => $santaRosaTrujillo->id, 'promo' => $promoTrujillo2011->id, 'aula' => null, 'name' => 'Valeria Cabanillas Rodríguez', 'dni' => '47221199', 'entry' => 2007, 'grad' => 2011, 'city' => 'Trujillo', 'phone' => '949887711', 'email' => 'egresado.trujillo@jmsperu.pe', 'prof' => 'Arquitecta Urbanista', 'comp' => 'Moche Diseño SAC', 'status' => 'verified'],
+            ['user_id' => null, 'inst' => $alfonsoUgarte->id, 'promo' => null, 'aula' => null, 'name' => 'Martín Saldarriaga León', 'dni' => '40881234', 'entry' => 1995, 'grad' => 1999, 'city' => 'Lima', 'phone' => '999441122', 'email' => 'msaldarriaga@example.pe', 'prof' => 'Economista', 'comp' => 'Finanzas del Pacífico', 'status' => 'verified'],
+            ['user_id' => null, 'inst' => $melitonCarvajal->id, 'promo' => null, 'aula' => null, 'name' => 'Patricia Cárdenas Ruiz', 'dni' => '41992233', 'entry' => 1999, 'grad' => 2003, 'city' => 'Lima', 'phone' => '987221144', 'email' => 'pcardenas@example.pe', 'prof' => 'Psicóloga Organizacional', 'comp' => 'Talento Perú', 'status' => 'verified'],
+            ['user_id' => null, 'inst' => $sanIgnacioPiura->id, 'promo' => null, 'aula' => null, 'name' => 'Gonzalo Burneo Vegas', 'dni' => '42883344', 'entry' => 2000, 'grad' => 2004, 'city' => 'Piura', 'phone' => '968112244', 'email' => 'gburneo@example.pe', 'prof' => 'Abogado Empresarial', 'comp' => 'Estudio Burneo Piura', 'status' => 'verified'],
+            ['user_id' => null, 'inst' => $santaMariaPiura->id, 'promo' => null, 'aula' => null, 'name' => 'Claudia Timaná Flores', 'dni' => '45994455', 'entry' => 2005, 'grad' => 2009, 'city' => 'Piura', 'phone' => '969554433', 'email' => 'ctimana@example.pe', 'prof' => 'Ingeniera Química', 'comp' => 'Refinería Norte', 'status' => 'verified'],
+            ['user_id' => null, 'inst' => $sanAgustinChiclayo->id, 'promo' => null, 'aula' => null, 'name' => 'Paola Cabrejos Ortiz', 'dni' => '46335566', 'entry' => 2008, 'grad' => 2012, 'city' => 'Chiclayo', 'phone' => '978223344', 'email' => 'pcabrejos@example.pe', 'prof' => 'Contadora Pública', 'comp' => 'Consultora Lambayeque', 'status' => 'verified'],
+            ['user_id' => null, 'inst' => $claretianoTrujillo->id, 'promo' => null, 'aula' => null, 'name' => 'Andrés Rebaza Orbegoso', 'dni' => '44776655', 'entry' => 2003, 'grad' => 2007, 'city' => 'Trujillo', 'phone' => '948223311', 'email' => 'arebaza@example.pe', 'prof' => 'Médico Cirujano', 'comp' => 'Hospital Regional Norte', 'status' => 'verified'],
+            ['user_id' => null, 'inst' => $guadalupe->id, 'promo' => $promoG2006->id, 'aula' => $aula5A->id, 'name' => 'Rodrigo Huerta Villalobos', 'dni' => '43771188', 'entry' => 2002, 'grad' => 2006, 'city' => 'Lima', 'phone' => '991558844', 'email' => 'rhuerta@example.pe', 'prof' => 'Administrador Financiero', 'comp' => 'Banca Corporativa', 'status' => 'verified'],
+            ['user_id' => null, 'inst' => $guadalupe->id, 'promo' => $promoG2006->id, 'aula' => $aula5B->id, 'name' => 'Claudia Morales Espinoza', 'dni' => '43882299', 'entry' => 2002, 'grad' => 2006, 'city' => 'Lima', 'phone' => '992669955', 'email' => 'cmorales@example.pe', 'prof' => 'Diseñadora UX/UI', 'comp' => 'Estudio Digital Lima', 'status' => 'pending'],
+            ['user_id' => null, 'inst' => $salesianoPiura->id, 'promo' => $promoPiura2006->id, 'aula' => null, 'name' => 'Luis Alberto Chunga Zapata', 'dni' => '44229977', 'entry' => 2002, 'grad' => 2006, 'city' => 'Piura', 'phone' => '969118855', 'email' => 'lchunga@example.pe', 'prof' => 'Ingeniero Mecánico', 'comp' => 'Maquinarias Piura SAC', 'status' => 'verified'],
+            ['user_id' => null, 'inst' => $ciencias->id, 'promo' => $promoC2016->id, 'aula' => $aulaC5A->id, 'name' => 'Camila Condori Apaza', 'dni' => '70124578', 'entry' => 2012, 'grad' => 2016, 'city' => 'Cusco', 'phone' => '984776655', 'email' => 'ccondori@example.pe', 'prof' => 'Antropóloga Turística', 'comp' => 'Cusco Heritage Tours', 'status' => 'pending'],
+            ['user_id' => null, 'inst' => $independencia->id, 'promo' => $promoI2001->id, 'aula' => $aulaI5A->id, 'name' => 'Renato Zúñiga Cornejo', 'dni' => '41336699', 'entry' => 1997, 'grad' => 2001, 'city' => 'Arequipa', 'phone' => '958334477', 'email' => 'rzuniga@example.pe', 'prof' => 'Ingeniero de Minas', 'comp' => 'Minera Sur Perú', 'status' => 'verified'],
+            ['user_id' => null, 'inst' => $sanjose->id, 'promo' => $promoSJ2010->id, 'aula' => null, 'name' => 'Oscar Mío Llontop', 'dni' => '46990011', 'entry' => 2006, 'grad' => 2010, 'city' => 'Chiclayo', 'phone' => '979112266', 'email' => 'omio@example.pe', 'prof' => 'Abogado Tributarista', 'comp' => 'Estudio Norte Legal', 'status' => 'verified'],
+            ['user_id' => null, 'inst' => $claretianoTrujillo->id, 'promo' => null, 'aula' => null, 'name' => 'Sofía Gálvez Pretell', 'dni' => '47881122', 'entry' => 2009, 'grad' => 2013, 'city' => 'Trujillo', 'phone' => '949334488', 'email' => 'sgalvez@example.pe', 'prof' => 'Ingeniera Agroindustrial', 'comp' => 'Camposol Export', 'status' => 'verified'],
         ];
 
         foreach ($alumniRows as $row) {
@@ -869,6 +942,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $vendorSouvenirs = Vendor::create([
+            'user_id' => $vendorSouvenirsUser->id,
             'business_name' => 'Souvenirs & Grabados Lima EIRL',
             'trade_name' => 'Grabados JMS Lima',
             'ruc' => '20559876543',
@@ -1298,6 +1372,58 @@ class DatabaseSeeder extends Seeder
             'status' => 'goal_reached',
         ]);
 
+        $anilloProd = Product::with('variants')->where('slug', 'anillo-promocion-oro-plata')->firstOrFail();
+
+        $camp4 = Campaign::create([
+            'institution_id' => $guadalupe->id,
+            'promotion_id' => $promoG2001->id,
+            'product_id' => $anilloProd->id,
+            'created_by' => $superAdmin->id,
+            'title' => 'Anillo Bodas de Plata Oro/Plata — Guadalupe 2001',
+            'slug' => 'anillo-bodas-plata-guadalupe-2001',
+            'description' => 'Edición conmemorativa por los 25 años de egreso con escudo tallado, año 2001 e iniciales grabadas por dentro.',
+            'unit_price' => 159.00,
+            'deposit_percent' => 50,
+            'target_units' => 25,
+            'current_units' => 19,
+            'starts_at' => now()->subDays(10),
+            'ends_at' => now()->addDays(18),
+            'delivery_mode' => 'individual',
+            'status' => 'active',
+        ]);
+
+        CampaignParticipant::create([
+            'campaign_id' => $camp4->id,
+            'user_id' => $superAdmin->id,
+            'variant_id' => $anilloProd->variants->first()->id,
+            'participant_name' => 'Javier Soto Benavides',
+            'participant_phone' => '998112233',
+            'quantity' => 1,
+            'custom_name' => 'J. SOTO',
+            'custom_year' => '2001',
+            'amount_paid' => 159.00,
+            'total_amount' => 159.00,
+            'payment_status' => 'paid',
+        ]);
+
+        Campaign::create([
+            'institution_id' => $sanjose->id,
+            'promotion_id' => $promoSJ2010->id,
+            'product_id' => $tazaSanJose->id,
+            'created_by' => $superAdmin->id,
+            'title' => 'Set Taza & Recuerdo 16 Años — San José Chiclayo 2010',
+            'slug' => 'set-taza-san-jose-chiclayo-2010',
+            'description' => 'Campaña completada para el encuentro anual sanjosefino en Chiclayo.',
+            'unit_price' => 28.00,
+            'deposit_percent' => 100,
+            'target_units' => 50,
+            'current_units' => 54,
+            'starts_at' => now()->subDays(25),
+            'ends_at' => now()->addDays(2),
+            'delivery_mode' => 'consolidated_delegate',
+            'status' => 'goal_reached',
+        ]);
+
         // 9. Cupones y Zonas de Envío
         Coupon::create(['code' => 'PROMO10', 'description' => '10% de descuento en toda la tienda', 'type' => 'percent', 'value' => 10, 'min_order_amount' => 50, 'is_active' => true]);
         Coupon::create(['code' => 'EGRESADO20', 'description' => 'S/ 20.00 de descuento en compras desde S/ 120', 'type' => 'fixed', 'value' => 20, 'min_order_amount' => 120, 'is_active' => true]);
@@ -1432,16 +1558,398 @@ class DatabaseSeeder extends Seeder
             'notes' => 'Operación Plin pendiente de conciliación.',
         ]);
 
+        $zonePickup = ShippingZone::where('scope', 'pickup')->firstOrFail();
+        $zoneShalom = ShippingZone::where('courier_name', 'Shalom Cargo')->firstOrFail();
+        $moderatorUser = User::where('email', 'moderador@jmsperu.pe')->firstOrFail();
+
+        $catalogProducts = Product::with('variants')->whereIn('slug', [
+            'polera-hoodie-promocional',
+            'anillo-promocion-oro-plata',
+            'cadena-dije-escudo-plata',
+            'medalla-honor-dorada-cinta',
+            'mochila-ejecutiva-promocion',
+            'libreta-ejecutiva-lapicero',
+            'copa-cristal-brindis',
+            'recordatorio-placa-cristal-nogal',
+            'caja-souvenir-aniversario',
+            'termo-inox-pin-solapa',
+        ])->get()->keyBy('slug');
+
+        $extraOrders = [
+            [
+                'order_number' => 'PED-2026-0003',
+                'user' => $alumniPiuraUser,
+                'institution' => $salesianoPiura,
+                'phone' => '969445511',
+                'dni' => '44118822',
+                'zone' => $zoneShalom,
+                'address' => 'Av. Sánchez Cerro 840, Urb. Miraflores',
+                'city' => 'Piura',
+                'department' => 'Piura',
+                'tracking_code' => 'SHM-441082PE',
+                'discount' => 27.60,
+                'coupon' => 'PROMO10',
+                'payment_status' => 'verified',
+                'order_status' => 'delivered',
+                'days_ago' => 14,
+                'payment_method' => 'transfer',
+                'payment_ref' => 'BCP-2026-99124',
+                'payment_notes' => 'Transferencia BCP conciliada.',
+                'invoice_type' => 'boleta',
+                'items' => [
+                    ['product' => $catalogProducts['anillo-promocion-oro-plata'], 'qty' => 1, 'unit_price' => 159.00, 'custom' => ['escudo' => 'Salesiano Piura', 'promocion' => '2006', 'iniciales' => 'C.S.']],
+                    ['product' => $poloSalesianoPiura, 'qty' => 2, 'unit_price' => 58.50, 'custom' => ['promocion' => '2006', 'talla' => 'L']],
+                ],
+            ],
+            [
+                'order_number' => 'PED-2026-0004',
+                'user' => $alumniTrujilloUser,
+                'institution' => $santaRosaTrujillo,
+                'phone' => '949887711',
+                'dni' => '47221199',
+                'zone' => $zoneOlva,
+                'address' => 'Calle San Martín 612, Centro Histórico',
+                'city' => 'Trujillo',
+                'department' => 'La Libertad',
+                'tracking_code' => 'OLV-772310PE',
+                'discount' => 20.00,
+                'coupon' => 'EGRESADO20',
+                'payment_status' => 'verified',
+                'order_status' => 'delivered',
+                'days_ago' => 11,
+                'payment_method' => 'yape',
+                'payment_ref' => 'YAPE-661209',
+                'payment_notes' => 'Pago verificado vía Yape.',
+                'invoice_type' => 'boleta',
+                'items' => [
+                    ['product' => $catalogProducts['cadena-dije-escudo-plata'], 'qty' => 1, 'unit_price' => 122.00, 'custom' => ['escudo' => 'Santa Rosa Trujillo', 'grabado' => '2011']],
+                    ['product' => $catalogProducts['medalla-honor-dorada-cinta'], 'qty' => 2, 'unit_price' => 45.00, 'custom' => ['dedicatoria' => 'Bodas de Cristal 2011']],
+                ],
+            ],
+            [
+                'order_number' => 'PED-2026-0005',
+                'user' => $buyerLimaUser,
+                'institution' => $melitonCarvajal,
+                'phone' => '987114422',
+                'dni' => '71234567',
+                'zone' => $zoneLima,
+                'address' => 'Av. Petit Thouars 3210, San Isidro',
+                'city' => 'Lima',
+                'department' => 'Lima',
+                'tracking_code' => 'MPR-990145PE',
+                'discount' => 0.00,
+                'coupon' => null,
+                'payment_status' => 'verified',
+                'order_status' => 'in_production',
+                'days_ago' => 6,
+                'payment_method' => 'card',
+                'payment_ref' => 'CARD-884192',
+                'payment_notes' => 'Pago confirmado en pasarela.',
+                'invoice_type' => 'factura',
+                'legal_name' => 'Inversiones Carvajal SAC',
+                'items' => [
+                    ['product' => $catalogProducts['mochila-ejecutiva-promocion'], 'qty' => 2, 'unit_price' => 135.00, 'custom' => ['escudo' => 'Melitón Carvajal', 'anio' => '2014']],
+                    ['product' => $catalogProducts['libreta-ejecutiva-lapicero'], 'qty' => 2, 'unit_price' => 68.00, 'custom' => ['promocion' => '2014']],
+                ],
+            ],
+            [
+                'order_number' => 'PED-2026-0006',
+                'user' => $promoDelegate,
+                'institution' => $guadalupe,
+                'phone' => '991223344',
+                'dni' => '43891234',
+                'zone' => $zonePickup,
+                'address' => 'Av. Alfonso Ugarte 1227, Cercado de Lima',
+                'city' => 'Lima',
+                'department' => 'Lima',
+                'tracking_code' => 'DEL-2026-06',
+                'discount' => 45.00,
+                'coupon' => 'BODASPLATA',
+                'payment_status' => 'verified',
+                'order_status' => 'confirmed',
+                'days_ago' => 4,
+                'payment_method' => 'transfer',
+                'payment_ref' => 'BBVA-441008',
+                'payment_notes' => 'Consolidado delegación Promoción 2006.',
+                'invoice_type' => 'boleta',
+                'items' => [
+                    ['product' => $catalogProducts['copa-cristal-brindis'], 'qty' => 4, 'unit_price' => 74.00, 'custom' => ['evento' => 'Reencuentro 20 Años Guadalupe']],
+                    ['product' => $catalogProducts['recordatorio-placa-cristal-nogal'], 'qty' => 1, 'unit_price' => 105.00, 'custom' => ['homenaje' => 'Docentes Promoción 2006']],
+                ],
+            ],
+            [
+                'order_number' => 'PED-2026-0007',
+                'user' => $aulaDelegate,
+                'institution' => $ciencias,
+                'phone' => '984112233',
+                'dni' => '44556677',
+                'zone' => $zoneOlva,
+                'address' => 'Av. El Sol 510, Cusco',
+                'city' => 'Cusco',
+                'department' => 'Cusco',
+                'tracking_code' => 'OLV-881244PE',
+                'discount' => 19.60,
+                'coupon' => 'PROMO10',
+                'payment_status' => 'verified',
+                'order_status' => 'shipped',
+                'days_ago' => 3,
+                'payment_method' => 'plin',
+                'payment_ref' => 'PLIN-339812',
+                'payment_notes' => 'Plin verificado a número oficial.',
+                'invoice_type' => 'boleta',
+                'items' => [
+                    ['product' => $catalogProducts['polera-hoodie-promocional'], 'qty' => 2, 'unit_price' => 98.00, 'custom' => ['escudo' => 'Ciencias Cusco', 'promocion' => '2016']],
+                ],
+            ],
+            [
+                'order_number' => 'PED-2026-0008',
+                'user' => $alumniUser,
+                'institution' => $guadalupe,
+                'phone' => '955443322',
+                'dni' => '45678912',
+                'zone' => $zoneLima,
+                'address' => 'Av. Salaverry 2410, Jesús María',
+                'city' => 'Lima',
+                'department' => 'Lima',
+                'tracking_code' => 'MPR-772110PE',
+                'discount' => 0.00,
+                'coupon' => null,
+                'payment_status' => 'verified',
+                'order_status' => 'delivered',
+                'days_ago' => 19,
+                'payment_method' => 'yape',
+                'payment_ref' => 'YAPE-551904',
+                'payment_notes' => 'Entrega completada (con devolución aprobada y NC).',
+                'invoice_type' => 'boleta',
+                'credit_note_reason' => 'Devolución aprobada por cambio de modelo conmemorativo',
+                'items' => [
+                    ['product' => $catalogProducts['caja-souvenir-aniversario'], 'qty' => 2, 'unit_price' => 64.00, 'custom' => ['evento' => 'Reencuentro 2006']],
+                    ['product' => $catalogProducts['termo-inox-pin-solapa'], 'qty' => 1, 'unit_price' => 58.00, 'custom' => ['nombre' => 'A. VALDIVIA']],
+                ],
+            ],
+            [
+                'order_number' => 'PED-2026-0009',
+                'user' => $buyerUser,
+                'institution' => $sanjose,
+                'phone' => '944332211',
+                'dni' => '46789012',
+                'zone' => $zoneShalom,
+                'address' => 'Av. Balta 920, Chiclayo',
+                'city' => 'Chiclayo',
+                'department' => 'Lambayeque',
+                'tracking_code' => null,
+                'discount' => 0.00,
+                'coupon' => null,
+                'payment_status' => 'pending',
+                'order_status' => 'pending',
+                'days_ago' => 1,
+                'payment_method' => 'yape',
+                'payment_ref' => 'YAPE-PEND-909',
+                'payment_notes' => 'Voucher enviado por validar.',
+                'invoice_type' => null,
+                'items' => [
+                    ['product' => $tazaSanJose, 'qty' => 3, 'unit_price' => 34.00, 'custom' => ['promocion' => '2010']],
+                ],
+            ],
+            [
+                'order_number' => 'PED-2026-0010',
+                'user' => $buyerLimaUser,
+                'institution' => $independencia,
+                'phone' => '987114422',
+                'dni' => '71234567',
+                'zone' => $zoneOlva,
+                'address' => 'Av. Ejército 412, Cayma',
+                'city' => 'Arequipa',
+                'department' => 'Arequipa',
+                'tracking_code' => null,
+                'discount' => 0.00,
+                'coupon' => null,
+                'payment_status' => 'rejected',
+                'order_status' => 'cancelled',
+                'days_ago' => 8,
+                'payment_method' => 'transfer',
+                'payment_ref' => 'ERR-40412',
+                'payment_notes' => 'Referencia bancaria duplicada o incompleta.',
+                'invoice_type' => null,
+                'items' => [
+                    ['product' => $anuarioIndep, 'qty' => 1, 'unit_price' => 92.00, 'custom' => ['promocion' => '2001']],
+                ],
+            ],
+        ];
+
+        $seededOrders = [];
+        foreach ($extraOrders as $row) {
+            $subtotal = collect($row['items'])->sum(fn (array $item) => round($item['qty'] * $item['unit_price'], 2));
+            $shipping = (float) $row['zone']->rate;
+            $total = max(0, round($subtotal - $row['discount'] + $shipping, 2));
+            $order = Order::create([
+                'order_number' => $row['order_number'],
+                'user_id' => $row['user']->id,
+                'institution_id' => $row['institution']->id,
+                'customer_name' => $row['user']->name,
+                'customer_email' => $row['user']->email,
+                'customer_phone' => $row['phone'],
+                'customer_dni_ruc' => $row['dni'],
+                'shipping_zone_id' => $row['zone']->id,
+                'shipping_address' => $row['address'],
+                'city' => $row['city'],
+                'department' => $row['department'],
+                'tracking_code' => $row['tracking_code'],
+                'courier_name' => $row['zone']->courier_name,
+                'subtotal' => $subtotal,
+                'discount_amount' => $row['discount'],
+                'shipping_cost' => $shipping,
+                'total' => $total,
+                'institution_commission_amount' => round($total * 0.10, 2),
+                'coupon_code' => $row['coupon'],
+                'payment_status' => $row['payment_status'],
+                'order_status' => $row['order_status'],
+            ]);
+
+            $timestamp = now()->subDays($row['days_ago']);
+            $order->forceFill(['created_at' => $timestamp, 'updated_at' => $timestamp])->save();
+
+            foreach ($row['items'] as $item) {
+                $variant = $item['product']->variants->first() ?? $item['product']->variants()->first();
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $item['product']->id,
+                    'variant_id' => $variant?->id,
+                    'vendor_id' => $item['product']->vendor_id,
+                    'product_name' => $item['product']->name,
+                    'variant_label' => $variant ? "{$variant->size} / {$variant->color}" : 'Estándar',
+                    'quantity' => $item['qty'],
+                    'unit_price' => $item['unit_price'],
+                    'unit_cost' => (float) $item['product']->purchase_price,
+                    'total_price' => round($item['qty'] * $item['unit_price'], 2),
+                    'customization_data' => $item['custom'],
+                ]);
+            }
+
+            $payStatus = match ($row['payment_status']) {
+                'verified' => 'approved',
+                'rejected' => 'rejected',
+                default => 'pending_review',
+            };
+
+            Payment::create([
+                'order_id' => $order->id,
+                'method' => $row['payment_method'],
+                'amount' => $total,
+                'reference_code' => $row['payment_ref'],
+                'status' => $payStatus,
+                'verified_by' => $payStatus === 'approved' ? $superAdmin->id : null,
+                'verified_at' => $payStatus === 'approved' ? $timestamp->copy()->addHours(2) : null,
+                'notes' => $row['payment_notes'],
+            ]);
+
+            if (! empty($row['invoice_type'])) {
+                InvoiceService::issueForOrder($order, $row['invoice_type'], $row['legal_name'] ?? $row['user']->name);
+            }
+            if (! empty($row['credit_note_reason'])) {
+                InvoiceService::issueCreditNote($order, $row['credit_note_reason']);
+            }
+
+            $seededOrders[$row['order_number']] = $order;
+        }
+
+        ReturnRequest::create([
+            'order_id' => $seededOrders['PED-2026-0003']->id,
+            'user_id' => $alumniPiuraUser->id,
+            'request_type' => 'cambio_talla',
+            'reason' => 'Solicito cambio de talla L a XL en uno de los polos Pima Salesiano Piura.',
+            'status' => 'pending',
+        ]);
+
+        ReturnRequest::create([
+            'order_id' => $seededOrders['PED-2026-0008']->id,
+            'user_id' => $alumniUser->id,
+            'request_type' => 'devolucion',
+            'reason' => 'Reemplazo por set de aniversario en formato caja rígida premium.',
+            'status' => 'approved',
+            'admin_notes' => 'Nota de crédito SUNAT NC01 emitida y reembolso coordinado.',
+            'resolved_by' => $superAdmin->id,
+            'resolved_at' => now()->subDays(4),
+        ]);
+
         VendorSettlement::create([
             'vendor_id' => $vendorGamarra->id,
             'period_label' => '2026-10',
-            'gross_sales' => 129.00,
-            'platform_commission' => 15.48,
-            'net_payout' => 113.52,
+            'gross_sales' => 451.00,
+            'platform_commission' => 54.12,
+            'net_payout' => 396.88,
             'status' => 'paid',
             'paid_at' => now()->subDays(5),
             'reference_code' => 'BCP-TRF-88412',
             'notes' => 'Liquidación quincenal de prendas entregadas.',
+        ]);
+
+        VendorSettlement::create([
+            'vendor_id' => $vendorSouvenirs->id,
+            'period_label' => '2026-10',
+            'gross_sales' => 765.00,
+            'platform_commission' => 114.75,
+            'net_payout' => 650.25,
+            'status' => 'pending',
+            'notes' => 'Liquidación pendiente por anillos, cadenas, medallas y recordatorios entregados.',
+        ]);
+
+        VendorSettlement::create([
+            'vendor_id' => $vendorNorte->id,
+            'period_label' => '2026-10',
+            'gross_sales' => 149.00,
+            'platform_commission' => 14.90,
+            'net_payout' => 134.10,
+            'status' => 'pending',
+            'notes' => 'Liquidación mensual de gorros y bordados norteños.',
+        ]);
+
+        ProductReview::create([
+            'product_id' => $catalogProducts['anillo-promocion-oro-plata']->id,
+            'user_id' => $alumniPiuraUser->id,
+            'rating' => 5,
+            'comment' => 'Acabado de joyería real con baño en oro 18K y grabado nítido del escudo Salesiano.',
+        ]);
+
+        ProductReview::create([
+            'product_id' => $catalogProducts['cadena-dije-escudo-plata']->id,
+            'user_id' => $alumniTrujilloUser->id,
+            'rating' => 5,
+            'comment' => 'Preciosa cadena en plata 925 y entrega puntual en Trujillo.',
+        ]);
+
+        ProductReview::create([
+            'product_id' => $poloSalesianoPiura->id,
+            'user_id' => $alumniPiuraUser->id,
+            'rating' => 4,
+            'comment' => 'Tela Pima muy fresca para el clima de Piura y buen ajuste de tallas.',
+        ]);
+
+        ProductReview::create([
+            'product_id' => $catalogProducts['copa-cristal-brindis']->id,
+            'user_id' => $promoDelegate->id,
+            'rating' => 5,
+            'comment' => 'Llegaron protegidas para el brindis de reencuentro de los 20 años.',
+        ]);
+
+        ContentReport::create([
+            'user_id' => $alumniUser->id,
+            'reportable_type' => CommunityPost::class,
+            'reportable_id' => $post1->id,
+            'reason' => 'Consulta de verificación de fecha del almuerzo',
+            'details' => 'Reportado por participante para confirmar actualización de hora de recepción en el local.',
+            'status' => 'open',
+        ]);
+
+        ContentReport::create([
+            'user_id' => $buyerLimaUser->id,
+            'reportable_type' => CommunityPost::class,
+            'reportable_id' => $post1->id,
+            'reason' => 'Solicitud de fijar post de tallas al inicio',
+            'details' => 'Ya atendido y fijado por moderación.',
+            'status' => 'resolved',
+            'resolved_by' => $moderatorUser->id,
+            'resolved_at' => now()->subDays(2),
         ]);
 
         // 11. Plantillas de Comunicación, Notificaciones, Banners de Temporada y Blog (Módulos K & L)
@@ -1456,6 +1964,24 @@ class DatabaseSeeder extends Seeder
             'body' => 'Faltan solo 6 unidades para iniciar la producción consolidada de la Promoción 2006.',
             'channel' => 'web',
             'action_url' => '/campanas/casaca-promo-2006-guadalupe',
+        ]);
+
+        UserNotification::create([
+            'user_id' => $alumniPiuraUser->id,
+            'institution_id' => $salesianoPiura->id,
+            'title' => 'Pedido PED-2026-0003 entregado en Piura',
+            'body' => 'Tu pedido de Anillo de Promoción y Polos Pima fue entregado vía Shalom Cargo.',
+            'channel' => 'web',
+            'action_url' => '/seguimiento?codigo=PED-2026-0003',
+        ]);
+
+        UserNotification::create([
+            'user_id' => $promoDelegate->id,
+            'institution_id' => $guadalupe->id,
+            'title' => 'Nueva solicitud de cambio de talla pendiente',
+            'body' => 'Revisa la solicitud abierta del pedido PED-2026-0001 en el panel de operaciones.',
+            'channel' => 'web',
+            'action_url' => '/admin/pedidos',
         ]);
 
         PromotionalBanner::create([
@@ -1537,10 +2063,53 @@ class DatabaseSeeder extends Seeder
             'responded_at' => now()->subDay(),
         ]);
 
+        Complaint::create([
+            'complaint_code' => 'LRV-2026-0002',
+            'order_number' => 'PED-2026-0008',
+            'customer_name' => 'Andrea Valdivia Toribio',
+            'customer_doc_number' => '45678912',
+            'customer_email' => 'egresado@jmsperu.pe',
+            'customer_phone' => '955443322',
+            'type' => 'reclamo',
+            'subject' => 'Solicitud de emisión de Nota de Crédito por cambio de souvenir',
+            'detail' => 'Solicité reemplazo de caja souvenir por cambio de presentación.',
+            'request_detail' => 'Emitir Nota de Crédito SUNAT vinculada al comprobante original.',
+            'status' => 'resolved',
+            'response' => 'Nota de Crédito NC01 emitida y reembolso aplicado correctamente.',
+            'responded_at' => now()->subDays(3),
+        ]);
+
+        Complaint::create([
+            'complaint_code' => 'LRV-2026-0003',
+            'order_number' => 'PED-2026-0009',
+            'customer_name' => 'Pedro Rojas Castillo',
+            'customer_doc_number' => '46789012',
+            'customer_email' => 'comprador@jmsperu.pe',
+            'customer_phone' => '944332211',
+            'type' => 'queja',
+            'subject' => 'Demora en validación de comprobante Yape de provincia',
+            'detail' => 'Realicé el depósito hace unas horas para despacho en Chiclayo.',
+            'request_detail' => 'Confirmar conciliación para despacho prioritario en Shalom.',
+            'status' => 'pending',
+        ]);
+
+        SystemSetting::firstOrCreate(
+            ['key' => 'apiperu_enabled'],
+            ['group' => 'apiperu', 'value' => '1', 'is_encrypted' => false, 'description' => 'Activa o desactiva las consultas DNI a apiperu.dev.']
+        );
+        SystemSetting::firstOrCreate(
+            ['key' => 'apiperu_endpoint'],
+            ['group' => 'apiperu', 'value' => 'https://apiperu.dev/api/dni', 'is_encrypted' => false, 'description' => 'Endpoint oficial REST de apiperu.dev para consultas RENIEC.']
+        );
+        SystemSetting::firstOrCreate(
+            ['key' => 'whatsapp_number'],
+            ['group' => 'general', 'value' => '51959199368', 'is_encrypted' => false, 'description' => 'Número oficial de WhatsApp comercial Grupo JMSPERU.']
+        );
+
         AuditLog::create([
             'user_id' => $superAdmin->id,
             'action' => 'system.seeded',
-            'description' => 'Sistema sembrado con 15 colegios históricos, catálogo completo con fotos reales y todos los módulos operativos.',
+            'description' => 'Sistema sembrado con 15 colegios históricos, catálogo completo con fotos reales, 10 pedidos, SUNAT, devoluciones y todos los módulos operativos.',
             'ip_address' => '127.0.0.1',
         ]);
     }

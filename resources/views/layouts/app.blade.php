@@ -58,7 +58,9 @@
                     <a href="{{ route('communities.index') }}" class="px-2 py-1.5 rounded-lg hover:bg-slate-100 {{ request()->routeIs('communities.*') ? 'text-[#1D70B8] bg-sky-50 font-semibold' : '' }}">Comunidades</a>
                     <a href="{{ route('directory.index') }}" class="px-2 py-1.5 rounded-lg hover:bg-slate-100 {{ request()->routeIs('directory.*') ? 'text-[#1D70B8] bg-sky-50 font-semibold' : '' }}">Directorio</a>
                     <a href="{{ route('blog.index') }}" class="px-2 py-1.5 rounded-lg hover:bg-slate-100 {{ request()->routeIs('blog.*') ? 'text-[#1D70B8] bg-sky-50 font-semibold' : '' }}">Noticias</a>
-                    <a href="{{ route('manual.index') }}" class="px-2 py-1.5 rounded-lg hover:bg-slate-100 {{ request()->routeIs('manual.*') ? 'text-[#1D70B8] bg-sky-50 font-semibold' : '' }}">Manual</a>
+                    @auth
+                        <a href="{{ route('manual.index') }}" class="px-2 py-1.5 rounded-lg hover:bg-slate-100 {{ request()->routeIs('manual.*') ? 'text-[#1D70B8] bg-sky-50 font-semibold' : '' }}">Manual</a>
+                    @endauth
                 </nav>
 
                 <div class="flex items-center gap-2 shrink-0 whitespace-nowrap">
@@ -105,7 +107,9 @@
                 <a href="{{ route('communities.index') }}" class="block px-3 py-2 rounded-lg hover:bg-slate-100">Comunidades</a>
                 <a href="{{ route('directory.index') }}" class="block px-3 py-2 rounded-lg hover:bg-slate-100">Directorio de Egresados</a>
                 <a href="{{ route('blog.index') }}" class="block px-3 py-2 rounded-lg hover:bg-slate-100">Noticias y Guías</a>
-                <a href="{{ route('manual.index') }}" class="block px-3 py-2 rounded-lg hover:bg-slate-100">Manual de Uso (Web &amp; PDF)</a>
+                @auth
+                    <a href="{{ route('manual.index') }}" class="block px-3 py-2 rounded-lg hover:bg-slate-100">Manual de Uso (Web &amp; PDF)</a>
+                @endauth
                 @guest
                     <a href="{{ route('register') }}" class="block px-3 py-2 rounded-lg bg-amber-50 text-[#0F2D4A] font-bold">Regístrate Gratis en 15s →</a>
                 @endguest

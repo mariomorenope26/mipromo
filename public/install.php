@@ -1,10 +1,21 @@
 <?php
 
 declare(strict_types=1);
+use App\Enums\UserRole;
+use App\Models\SystemSetting;
+use App\Models\User;
+use Database\Seeders\DatabaseSeeder;
+use Database\Seeders\ProductionCatalogSeeder;
+use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 /**
- * Instalador Web Oficial MiPromo — Grupo JMSPERU Solutions
+ * Instalador Web Oficial MiPromo v2 — Grupo JMSPERU Solutions
  * Optimizado para hosting compartido cPanel / BanaHosting (PHP 8.2+ y MySQL).
+ * Incluye chequeo completo de extensiones (PDF/ZIP/cURL/GD), token apiperu.dev cifrado
+ * y selector de modo: Producción Limpia, Demostración Completa o Sistema en Blanco.
  */
 session_start();
 
@@ -89,8 +100,8 @@ $checks = [
         'ok' => file_exists($baseDir.'/public/build/manifest.json'),
     ],
     'storage_writable' => [
-        'label' => 'Permisos de escritura en storage/ y bootstrap/cache/',
-        'ok' => is_writable($baseDir.'/storage') && is_writable($baseDir.'/bootstrap/cache'),
+        'label' => 'Permisos de escritura en storage/, storage/app/ y bootstrap/cache/',
+        'ok' => is_writable($baseDir.'/storage') && is_writable($baseDir.'/storage/app') && is_writable($baseDir.'/bootstrap/cache'),
     ],
     'root_writable' => [
         'label' => 'Permisos para escribir archivo .env en raíz',
@@ -98,7 +109,7 @@ $checks = [
     ],
 ];
 
-foreach (['pdo_mysql', 'mbstring', 'openssl', 'tokenizer', 'xml', 'ctype', 'json', 'bcmath', 'fileinfo', 'gd'] as $ext) {
+foreach (['pdo_mysql', 'mbstring', 'openssl', 'tokenizer', 'xml', 'dom', 'ctype', 'json', 'bcmath', 'fileinfo', 'gd', 'curl', 'zip'] as $ext) {
     $checks['ext_'.$ext] = [
         'label' => "Extensión PHP: {$ext}",
         'ok' => extension_loaded($ext),
@@ -129,8 +140,14 @@ $form = [
     'admin_name' => $_POST['admin_name'] ?? 'Julio Moreno (Grupo JMSPERU)',
     'admin_email' => $_POST['admin_email'] ?? 'admin@jmsperu.pe',
     'admin_phone' => $_POST['admin_phone'] ?? '959199368',
-    'seed_catalog' => isset($_POST['seed_catalog']) || $_SERVER['REQUEST_METHOD'] !== 'POST',
+    'apiperu_token' => $_POST['apiperu_token'] ?? '',
+    'apiperu_endpoint' => $_POST['apiperu_endpoint'] ?? 'https://api.apiperu.dev/dni',
+    'seed_mode' => $_POST['seed_mode'] ?? 'production',
 ];
+
+if (! in_array($form['seed_mode'], ['production', 'demo', 'blank'], true)) {
+    $form['seed_mode'] = 'production';
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = (string) ($_POST['action'] ?? 'install');
@@ -222,6 +239,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'MAIL_FROM_ADDRESS='.envEscape($fromEmail),
                 'MAIL_FROM_NAME="${APP_NAME}"',
                 '',
+                'APIPERU_ENDPOINT='.envEscape(trim($form['apiperu_endpoint']) ?: 'https://api.apiperu.dev/dni'),
+                'APIPERU_TOKEN=',
+                '',
                 'VITE_APP_NAME="${APP_NAME}"',
                 '',
             ]);
@@ -233,7 +253,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($errors === []) {
             try {
-                // Limpiar caché de configuración previa si existiera
+                // Limpiar caché previa y quitar public/hot si existiera
+                if (file_exists($baseDir.'/public/hot')) {
+                    @unlink($baseDir.'/public/hot');
+                }
                 foreach (glob($baseDir.'/bootstrap/cache/*.php') ?: [] as $cacheFile) {
                     if (! str_ends_with($cacheFile, '.gitignore')) {
                         @unlink($cacheFile);
@@ -242,49 +265,80 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 require $baseDir.'/vendor/autoload.php';
                 $app = require $baseDir.'/bootstrap/app.php';
-                $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+                $kernel = $app->make(Kernel::class);
                 $kernel->bootstrap();
 
-                Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+                Artisan::call('migrate:fresh', ['--force' => true]);
 
-                // Crear cuenta real de Superadministrador
                 $adminEmail = strtolower(trim($form['admin_email']));
-                $superAdmin = App\Models\User::updateOrCreate(
-                    ['email' => $adminEmail],
-                    [
-                        'name' => trim($form['admin_name']),
-                        'password' => Illuminate\Support\Facades\Hash::make($adminPass),
-                        'role' => App\Enums\UserRole::SuperAdmin->value,
-                        'phone' => trim($form['admin_phone']) ?: '959199368',
-                        'city' => 'Lima',
-                        'referral_code' => 'JMS'.strtoupper(Illuminate\Support\Str::random(5)),
-                        'is_active' => true,
-                        'privacy_consent_at' => now(),
-                    ]
-                );
+                $adminPhone = preg_replace('/\D+/', '', trim($form['admin_phone'])) ?: '959199368';
 
-                if ($form['seed_catalog']) {
-                    Illuminate\Support\Facades\Artisan::call('db:seed', [
-                        '--class' => Database\Seeders\ProductionCatalogSeeder::class,
+                if ($form['seed_mode'] === 'demo') {
+                    Artisan::call('db:seed', [
+                        '--class' => DatabaseSeeder::class,
                         '--force' => true,
                     ]);
+
+                    $superAdmin = User::updateOrCreate(
+                        ['email' => $adminEmail],
+                        [
+                            'name' => trim($form['admin_name']),
+                            'password' => Hash::make($adminPass),
+                            'role' => UserRole::SuperAdmin->value,
+                            'phone' => $adminPhone,
+                            'city' => 'Lima',
+                            'referral_code' => 'JMS'.strtoupper(Str::random(5)),
+                            'is_active' => true,
+                            'privacy_consent_at' => now(),
+                        ]
+                    );
+                } else {
+                    $superAdmin = User::create([
+                        'name' => trim($form['admin_name']),
+                        'email' => $adminEmail,
+                        'password' => Hash::make($adminPass),
+                        'role' => UserRole::SuperAdmin->value,
+                        'phone' => $adminPhone,
+                        'city' => 'Lima',
+                        'referral_code' => 'JMS'.strtoupper(Str::random(5)),
+                        'is_active' => true,
+                        'privacy_consent_at' => now(),
+                    ]);
+
+                    if ($form['seed_mode'] === 'production') {
+                        Artisan::call('db:seed', [
+                            '--class' => ProductionCatalogSeeder::class,
+                            '--force' => true,
+                        ]);
+                    }
+                }
+
+                // Configurar parámetros iniciales y cifrar token apiperu.dev si fue provisto
+                SystemSetting::setValue('apiperu_enabled', '1', 'apiperu', false, 'Activa consulta DNI apiperu.dev');
+                SystemSetting::setValue('apiperu_endpoint', trim($form['apiperu_endpoint']) ?: 'https://api.apiperu.dev/dni', 'apiperu', false, 'Endpoint oficial apiperu.dev');
+                SystemSetting::setValue('whatsapp_number', $adminPhone, 'general', false, 'WhatsApp oficial');
+                SystemSetting::setValue('support_email', $adminEmail, 'general', false, 'Correo oficial de soporte');
+
+                if (trim($form['apiperu_token']) !== '') {
+                    SystemSetting::setValue('apiperu_token', trim($form['apiperu_token']), 'apiperu', true, 'Token Bearer cifrado de apiperu.dev');
                 }
 
                 try {
                     if (! file_exists($baseDir.'/public/storage')) {
-                        Illuminate\Support\Facades\Artisan::call('storage:link');
+                        Artisan::call('storage:link');
                     }
                 } catch (Throwable) {
                     // En algunos planes shared hosting symlink() puede estar deshabilitado.
                 }
 
-                Illuminate\Support\Facades\Artisan::call('config:cache');
-                Illuminate\Support\Facades\Artisan::call('route:cache');
-                Illuminate\Support\Facades\Artisan::call('view:cache');
+                Artisan::call('config:cache');
+                Artisan::call('route:cache');
+                Artisan::call('view:cache');
 
                 file_put_contents($lockFile, json_encode([
                     'installed_at' => date('c'),
                     'app_url' => rtrim($form['app_url'], '/'),
+                    'mode' => $form['seed_mode'],
                     'super_admin' => $superAdmin->email,
                 ], JSON_PRETTY_PRINT));
 
@@ -302,11 +356,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Instalador MiPromo — Hosting BanaHosting cPanel</title>
+    <title>Instalador MiPromo v2 — Hosting BanaHosting cPanel</title>
     <style>
         *{box-sizing:border-box}
         body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f1f5f9;color:#0f2d4a;line-height:1.5}
-        .wrap{max-width:940px;margin:32px auto;padding:0 16px}
+        .wrap{max-width:980px;margin:32px auto;padding:0 16px}
         .header{background:linear-gradient(135deg,#0f2d4a,#1d70b8);color:#fff;border-radius:24px;padding:28px 32px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px}
         .card{background:#fff;border:1px solid #cbd5e1;border-radius:20px;padding:24px;margin-top:20px;box-shadow:0 4px 16px rgba(15,45,74,.05)}
         h1{margin:0;font-size:24px}
@@ -324,6 +378,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .btn-primary{background:#1d70b8;color:#fff}
         .btn-dark{background:#0f2d4a;color:#fff}
         .btn-warn{background:#dc2626;color:#fff}
+        .mode-card{display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid #cbd5e1;border-radius:12px;background:#f8fafc;cursor:pointer;font-size:13px}
         .footer{text-align:center;font-size:12px;color:#64748b;margin:28px 0}
     </style>
 </head>
@@ -331,34 +386,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="wrap">
     <div class="header">
         <div>
-            <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#fde047">Despliegue Producción · cPanel BanaHosting</div>
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#fde047">Despliegue cPanel BanaHosting · v2.0</div>
             <h1>Instalador Web MiPromo Egresados Store</h1>
-            <p style="margin:6px 0 0;font-size:13px;opacity:.9">Configuración segura de entorno, base de datos MySQL y cuenta Superadministrador real.</p>
+            <p style="margin:6px 0 0;font-size:13px;opacity:.9">Configura MySQL, SMTP, Token API Perú (DNI), modo de datos y Superadmin real en minutos.</p>
         </div>
         <div style="background:#fff;padding:8px 14px;border-radius:14px">
             <strong style="color:#0f2d4a;font-size:14px">Grupo JMSPERU</strong>
         </div>
     </div>
 
-    <?php if ($errors !== []): ?>
+    <?php if ($errors !== []) { ?>
         <div class="alert alert-err">
             <strong>Revisa los siguientes puntos:</strong>
             <ul style="margin:6px 0 0 18px;padding:0">
-                <?php foreach ($errors as $err): ?>
+                <?php foreach ($errors as $err) { ?>
                     <li><?= h($err) ?></li>
-                <?php endforeach; ?>
+                <?php } ?>
             </ul>
         </div>
-    <?php endif; ?>
+    <?php } ?>
 
-    <?php if ($dbTestMessage !== null): ?>
+    <?php if ($dbTestMessage !== null) { ?>
         <div class="alert alert-ok">✓ <?= h($dbTestMessage) ?></div>
-    <?php endif; ?>
+    <?php } ?>
 
-    <?php if ($installedSuccess): ?>
+    <?php if ($installedSuccess) { ?>
         <div class="card">
-            <h2 style="color:#047857;font-size:22px">✓ ¡MiPromo quedó instalado en modo Producción!</h2>
-            <p>Tu base de datos MySQL fue migrada, las cachés quedaron optimizadas y tu cuenta <strong>Superadministrador (<?= h($form['admin_email']) ?>)</strong> está activa.</p>
+            <h2 style="color:#047857;font-size:22px">✓ ¡MiPromo quedó instalado correctamente!</h2>
+            <p>Tu base de datos MySQL fue migrada en modo <strong><?= h($form['seed_mode']) ?></strong>, las cachés quedaron activas y tu cuenta <strong>Superadministrador (<?= h($form['admin_email']) ?>)</strong> ya puede ingresar.</p>
             <p><strong>Paso de seguridad obligatorio:</strong> elimina <code>public/install.php</code> ahora mismo haciendo clic en el botón rojo o desde cPanel.</p>
             <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:16px">
                 <form method="POST">
@@ -369,20 +424,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <a href="/login" class="btn btn-dark" style="text-decoration:none">Iniciar Sesión como Superadmin →</a>
             </div>
         </div>
-    <?php else: ?>
+    <?php } else { ?>
         <div class="card">
-            <h2>1. Verificación del Servidor BanaHosting</h2>
+            <h2>1. Verificación del Servidor BanaHosting (PHP, PDF, ZIP, API DNI)</h2>
             <div class="grid">
-                <?php foreach ($checks as $item): ?>
+                <?php foreach ($checks as $item) { ?>
                     <div class="check">
                         <span><?= h($item['label']) ?></span>
                         <span class="<?= $item['ok'] ? 'ok' : 'fail' ?>"><?= $item['ok'] ? 'OK' : 'Falta' ?></span>
                     </div>
-                <?php endforeach; ?>
+                <?php } ?>
             </div>
         </div>
 
-        <form method="POST" class="card" style="display:flex;flex-direction:column;gap:20px">
+        <form method="POST" class="card" style="display:flex;flex-direction:column;gap:22px">
             <div>
                 <h2>2. Dominio y Base de Datos MySQL (cPanel)</h2>
                 <div class="grid">
@@ -421,10 +476,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <div>
-                <h2>3. Correo Transaccional SMTP (Opcional — cPanel Email)</h2>
+                <h2>3. Correo SMTP y Token API Perú (apiperu.dev)</h2>
                 <div class="grid">
                     <div>
-                        <label>Servidor SMTP</label>
+                        <label>Servidor SMTP (cPanel Email)</label>
                         <input type="text" name="mail_host" value="<?= h($form['mail_host']) ?>">
                     </div>
                     <div>
@@ -443,11 +498,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <label>Correo remitente</label>
                         <input type="email" name="mail_from_address" value="<?= h($form['mail_from_address']) ?>" placeholder="noreply@tudominio.com">
                     </div>
+                    <div>
+                        <label>Token Bearer apiperu.dev (opcional — configurable luego)</label>
+                        <input type="password" name="apiperu_token" value="<?= h($form['apiperu_token']) ?>" placeholder="Se cifrará automáticamente en BD">
+                    </div>
                 </div>
             </div>
 
             <div>
-                <h2>4. Cuenta Superadministrador Real (Sin usuarios demo)</h2>
+                <h2>4. Cuenta Superadministrador Real</h2>
                 <div class="grid">
                     <div>
                         <label>Nombre Completo *</label>
@@ -458,7 +517,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <input type="email" name="admin_email" required value="<?= h($form['admin_email']) ?>">
                     </div>
                     <div>
-                        <label>WhatsApp de Contacto</label>
+                        <label>WhatsApp Oficial</label>
                         <input type="text" name="admin_phone" value="<?= h($form['admin_phone']) ?>">
                     </div>
                     <div>
@@ -470,11 +529,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <input type="password" name="admin_password_confirmation" required>
                     </div>
                 </div>
+            </div>
 
-                <label style="display:flex;align-items:center;gap:8px;margin-top:14px;font-weight:600;cursor:pointer">
-                    <input type="checkbox" name="seed_catalog" value="1" <?= $form['seed_catalog'] ? 'checked' : '' ?>>
-                    <span>Cargar catálogo completo (casacas, polos, anillos, cadenas, medallas, souvenirs), colegios históricos y zonas de envío sin usuarios de prueba</span>
-                </label>
+            <div>
+                <h2>5. Modo de Inicialización de Datos</h2>
+                <div class="grid">
+                    <label class="mode-card">
+                        <input type="radio" name="seed_mode" value="production" <?= $form['seed_mode'] === 'production' ? 'checked' : '' ?> style="margin-top:3px">
+                        <span>
+                            <strong>Producción Limpia (Recomendado)</strong><br>
+                            <small>Carga catálogo ampliado (casacas, polos, anillos, cadenas, medallas, mochilas, libretas, copas), 15 colegios históricos y zonas de envío <u>sin usuarios de prueba</u>.</small>
+                        </span>
+                    </label>
+                    <label class="mode-card">
+                        <input type="radio" name="seed_mode" value="demo" <?= $form['seed_mode'] === 'demo' ? 'checked' : '' ?> style="margin-top:3px">
+                        <span>
+                            <strong>Demostración Completa (Pruebas QA)</strong><br>
+                            <small>Carga todos los módulos completos: 8 roles demo, pedidos SUNAT, devoluciones, egresados, campañas, comunidades y liquidaciones (luego puedes blanquear en Configuración).</small>
+                        </span>
+                    </label>
+                    <label class="mode-card">
+                        <input type="radio" name="seed_mode" value="blank" <?= $form['seed_mode'] === 'blank' ? 'checked' : '' ?> style="margin-top:3px">
+                        <span>
+                            <strong>Sistema en Blanco</strong><br>
+                            <small>Crea únicamente las tablas y tu cuenta Superadministrador sin datos iniciales.</small>
+                        </span>
+                    </label>
+                </div>
             </div>
 
             <div>
@@ -483,9 +564,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </button>
             </div>
         </form>
-    <?php endif; ?>
+    <?php } ?>
 
-    <p class="footer">Todos los derechos reservados son del Grupo JMSPERU :: WhatsApp 959199368</p>
+    <p class="footer">Todos los derechos reservados son del Grupo JMSPERU :: Contacto 959199368</p>
 </div>
 </body>
 </html>

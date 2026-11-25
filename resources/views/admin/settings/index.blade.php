@@ -166,5 +166,110 @@
             </div>
         </div>
     </div>
+
+    {{-- Mantenimiento Avanzado: Backup, Blanqueo y Datos de Ejemplo --}}
+    <div class="space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+                <h2 class="text-lg font-extrabold text-[#0F2D4A]">Mantenimiento, Respaldo y Datos de Demostración</h2>
+                <p class="text-xs text-slate-500">Herramientas administrativas de alto impacto para backups MySQL/SQLite, blanqueo limpio y reinicio de datos de prueba.</p>
+            </div>
+            <div class="flex flex-wrap gap-2 text-xs font-bold">
+                <span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">Usuarios: {{ $systemCounts['users'] }}</span>
+                <span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">Colegios: {{ $systemCounts['institutions'] }}</span>
+                <span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">Productos: {{ $systemCounts['products'] }}</span>
+                <span class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700">Pedidos: {{ $systemCounts['orders'] }}</span>
+            </div>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-6 items-start">
+            {{-- 1. Copia de Seguridad --}}
+            <div class="bg-white rounded-3xl border border-slate-200 p-6 space-y-4 shadow-sm">
+                <div class="flex items-start justify-between gap-2">
+                    <div>
+                        <span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold uppercase">Respaldo 100% PHP</span>
+                        <h3 class="text-base font-extrabold text-[#0F2D4A] mt-1">Copia de Seguridad (Backup)</h3>
+                    </div>
+                </div>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                    Genera un volcado SQL completo compatible con phpMyAdmin / BanaHosting cPanel junto a un manifiesto JSON en un paquete descargable, sin depender de shell ni mysqldump.
+                </p>
+
+                <form action="{{ route('admin.settings.backup') }}" method="POST">
+                    @csrf
+                    <button type="submit" class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold transition shadow-sm">
+                        Generar y Descargar Backup (ZIP/SQL) ↓
+                    </button>
+                </form>
+
+                @if(!empty($backups))
+                    <div class="pt-3 border-t border-slate-100 space-y-1.5">
+                        <p class="text-[11px] font-bold uppercase text-slate-400">Respaldos Recientes en Servidor</p>
+                        @foreach($backups as $bk)
+                            <div class="flex items-center justify-between gap-2 text-[11px] bg-slate-50 rounded-xl px-3 py-2 border border-slate-200">
+                                <div class="min-w-0">
+                                    <p class="font-mono font-bold text-slate-800 truncate">{{ $bk['name'] }}</p>
+                                    <p class="text-slate-500">{{ $bk['created_at'] }} · {{ $bk['size_kb'] }} KB</p>
+                                </div>
+                                <a href="{{ route('admin.settings.backup.download', $bk['name']) }}" class="px-2.5 py-1 rounded-lg bg-[#1D70B8] text-white font-bold shrink-0">Bajar</a>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+
+            {{-- 2. Iniciar Datos de Ejemplo --}}
+            <form action="{{ route('admin.settings.seed_demo') }}" method="POST"
+                  onsubmit="return confirm('¿Deseas reiniciar la base de datos con el conjunto completo de datos de demostración?');"
+                  class="bg-white rounded-3xl border border-sky-200 p-6 space-y-4 shadow-sm">
+                @csrf
+                <div>
+                    <span class="px-2.5 py-0.5 rounded-full bg-sky-100 text-[#1D70B8] text-[10px] font-extrabold uppercase">Entorno de Pruebas / QA</span>
+                    <h3 class="text-base font-extrabold text-[#0F2D4A] mt-1">Iniciar Datos de Ejemplo</h3>
+                </div>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                    Carga datos consistentes para probar todo el sistema: 15 colegios históricos, más de 75 productos (incluidos anillos, cadenas, medallas, mochilas y copas), los 8 roles de usuario, más de 30 egresados, 10 pedidos con SUNAT y devoluciones, campañas, comunidades y liquidaciones. Preserva tu configuración actual y token API.
+                </p>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Confirma tu contraseña actual *</label>
+                    <input type="password" name="current_password" required placeholder="Contraseña de Superadmin" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs">
+                </div>
+                <button type="submit" class="w-full py-2.5 rounded-xl bg-[#1D70B8] hover:bg-[#0F2D4A] text-white text-xs font-extrabold transition">
+                    Iniciar Datos de Ejemplo Ahora →
+                </button>
+            </form>
+
+            {{-- 3. Blanquear Sistema --}}
+            <form action="{{ route('admin.settings.wipe') }}" method="POST"
+                  onsubmit="return confirm('ATENCIÓN: Esta acción eliminará los datos actuales de pedidos, egresados y usuarios. ¿Continuar?');"
+                  class="bg-white rounded-3xl border border-rose-200 p-6 space-y-4 shadow-sm">
+                @csrf
+                <div>
+                    <span class="px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[10px] font-extrabold uppercase">Zona Crítica · Producción Limpia</span>
+                    <h3 class="text-base font-extrabold text-rose-900 mt-1">Blanquear Sistema</h3>
+                </div>
+                <p class="text-xs text-slate-600 leading-relaxed">
+                    Limpia por completo pedidos, pagos, egresados, comunidades y usuarios de prueba, conservando únicamente tu cuenta Superadministrador y la configuración del sistema.
+                </p>
+                <label class="flex items-start gap-2 text-xs text-slate-700 bg-slate-50 rounded-xl p-2.5 border border-slate-200 cursor-pointer">
+                    <input type="checkbox" name="keep_catalog" value="1" class="mt-0.5 rounded border-slate-300 text-[#1D70B8]">
+                    <span>Conservar catálogo base, colegios y zonas de envío (solo limpiar pedidos, movimientos y usuarios demo)</span>
+                </label>
+                <div class="space-y-2.5 text-xs">
+                    <div>
+                        <label class="block font-bold text-rose-900 mb-1">Escribe <strong>BLANQUEAR</strong> para confirmar *</label>
+                        <input type="text" name="confirm_phrase" required placeholder="BLANQUEAR" class="w-full px-3 py-2 rounded-xl border border-rose-300 font-mono uppercase">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Tu contraseña actual *</label>
+                        <input type="password" name="current_password" required placeholder="Contraseña de Superadmin" class="w-full px-3 py-2 rounded-xl border border-slate-300">
+                    </div>
+                </div>
+                <button type="submit" class="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold transition">
+                    Ejecutar Blanqueo del Sistema
+                </button>
+            </form>
+        </div>
+    </div>
 </div>
 @endsection

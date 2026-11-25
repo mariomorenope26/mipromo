@@ -8,6 +8,8 @@ use App\Models\Category;
 use App\Models\Community;
 use App\Models\CommunityCollection;
 use App\Models\CommunityPoll;
+use App\Models\Complaint;
+use App\Models\ContentReport;
 use App\Models\Institution;
 use App\Models\Order;
 use App\Models\Product;
@@ -863,22 +865,36 @@ it('configures encrypted apiperu.dev token, queries and registers clients/alumni
 
     expect(User::where('email', 'delegado.dni@example.pe')->value('dni'))->toBe('44556688');
 
-    // 4. Manual de Uso en Línea y Versión en PDF con capturas reales del sistema
+    // 4. Manual de Uso en Línea y Versión en PDF protegidos dentro del entorno autenticado
     auth()->logout();
-    $manualHtml = $this->get(route('manual.index'))
+    $this->get(route('manual.index'))->assertRedirect(route('login'));
+    $this->get(route('manual.pdf'))->assertRedirect(route('login'));
+    $this->get(route('home'))->assertOk()->assertDontSee(route('manual.index'));
+
+    $buyer = User::where('role', UserRole::Buyer->value)->firstOrFail();
+    $this->actingAs($buyer)->get(route('account.index'))->assertOk()->assertSee(route('manual.index'))->assertSee(route('manual.pdf'));
+
+    $this->actingAs($buyer)->get(route('manual.index'))
         ->assertOk()
         ->assertSee('Manual de Uso Interactivo')
         ->assertSee('apiperu.dev')
         ->assertSee('01-home-tienda.jpg')
         ->assertSee('17-admin-configuracion-token.jpg');
 
-    $pdfResponse = $this->get(route('manual.pdf'))->assertOk();
+    $pdfResponse = $this->actingAs($buyer)->get(route('manual.pdf'))->assertOk();
     expect($pdfResponse->headers->get('content-type'))->toContain('application/pdf');
     expect(str_starts_with((string) $pdfResponse->getContent(), '%PDF-'))->toBeTrue();
 });
 
 it('executes every storefront and backoffice search method cleanly and never creates vendor accounts with weak default password', function () {
     $superAdmin = User::where('role', UserRole::SuperAdmin->value)->firstOrFail();
+
+    // Datos de demostración consistentes en todos los módulos
+    expect(Order::count())->toBeGreaterThanOrEqual(10);
+    expect(ReturnRequest::count())->toBeGreaterThanOrEqual(2);
+    expect(ContentReport::count())->toBeGreaterThanOrEqual(2);
+    expect(Complaint::count())->toBeGreaterThanOrEqual(3);
+    expect(AlumniProfile::count())->toBeGreaterThanOrEqual(20);
 
     // Búsquedas públicas
     $this->get('/?q=Anillo')->assertOk()->assertSee('Anillo de Promoción');
@@ -912,4 +928,56 @@ it('executes every storefront and backoffice search method cleanly and never cre
 
     $vendorOwner = User::where('email', 'orfebre@example.pe')->firstOrFail();
     expect(Hash::check('password', $vendorOwner->password))->toBeFalse();
+});
+
+it('supports superadmin backup generation, system wipe with confirmation, and demo data initialization', function () {
+    $superAdmin = User::where('role', UserRole::SuperAdmin->value)->firstOrFail();
+
+    // 1. Copia de seguridad (Backup descargable)
+    $backupResponse = $this->actingAs($superAdmin)
+        ->post(route('admin.settings.backup'))
+        ->assertOk();
+    expect($backupResponse->headers->get('content-disposition'))->toContain('mipromo-backup-');
+
+    $backupDir = storage_path('app/backups');
+    $files = glob($backupDir.'/mipromo-backup-*') ?: [];
+    expect(count($files))->toBeGreaterThanOrEqual(1);
+
+    $this->actingAs($superAdmin)
+        ->get(route('admin.settings.backup.download', basename($files[0])))
+        ->assertOk();
+
+    // Cleanup backup file created by test after checking
+    foreach ($files as $file) {
+        @unlink($file);
+    }
+
+    // 2. Blanquear sistema rechaza frase errónea
+    $this->actingAs($superAdmin)->post(route('admin.settings.wipe'), [
+        'confirm_phrase' => 'INCORRECTO',
+        'current_password' => 'password',
+    ])->assertSessionHasErrors('confirm_phrase');
+    expect(Order::count())->toBeGreaterThanOrEqual(10);
+
+    // 3. Blanquear sistema con BLANQUEAR + contraseña correcta limpia todo excepto Superadmin y configuración
+    $this->actingAs($superAdmin)->post(route('admin.settings.wipe'), [
+        'confirm_phrase' => 'BLANQUEAR',
+        'current_password' => 'password',
+    ])->assertRedirect(route('admin.settings.index'));
+
+    expect(Order::count())->toBe(0);
+    expect(Product::count())->toBe(0);
+    expect(Institution::count())->toBe(0);
+    expect(User::count())->toBe(1);
+    expect(User::first()?->id)->toBe($superAdmin->id);
+
+    // 4. Iniciar Datos de Ejemplo repuebla todo el sistema consistentemente
+    $this->actingAs($superAdmin)->post(route('admin.settings.seed_demo'), [
+        'current_password' => 'password',
+    ])->assertRedirect(route('admin.settings.index'));
+
+    expect(Order::count())->toBeGreaterThanOrEqual(10);
+    expect(Institution::count())->toBe(15);
+    expect(AlumniProfile::count())->toBeGreaterThanOrEqual(20);
+    expect(User::count())->toBeGreaterThanOrEqual(12);
 });

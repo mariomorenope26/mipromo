@@ -12,6 +12,8 @@
         </div>
 
         <div class="flex flex-wrap gap-3">
+            <a href="{{ route('manual.index') }}" class="px-4 py-2.5 rounded-xl bg-sky-50 border border-sky-200 text-[#0F2D4A] text-xs font-bold hover:bg-sky-100 transition">Manual de Uso en Línea</a>
+            <a href="{{ route('manual.pdf') }}" class="px-4 py-2.5 rounded-xl bg-amber-400 text-[#0F2D4A] text-xs font-extrabold hover:bg-amber-300 transition">Manual PDF ↓</a>
             @if($user->canAccessAdmin())
                 <a href="{{ route('admin.dashboard') }}" class="px-5 py-2.5 rounded-xl bg-amber-500 text-white text-xs font-bold hover:bg-amber-600 transition">Ir al Panel Administrativo</a>
             @endif

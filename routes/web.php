@@ -95,6 +95,10 @@ Route::middleware(['auth', 'active'])->group(function (): void {
     Route::post('/mi-cuenta/privacidad', [AuthController::class, 'updatePrivacy'])->name('account.privacy');
     Route::post('/mi-cuenta/contrasena', [AuthController::class, 'updatePassword'])->name('account.password');
     Route::post('/mi-cuenta/notificaciones/leer', [AuthController::class, 'markNotificationsRead'])->name('account.notifications.read');
+
+    // Manual de Uso en Línea y Versión PDF (exclusivo usuarios autenticados)
+    Route::get('/manual', [ManualController::class, 'index'])->name('manual.index');
+    Route::get('/manual/pdf', [ManualController::class, 'pdf'])->name('manual.pdf');
 });
 
 // Cumplimiento Legal Perú (Ley 29733 y Libro de Reclamaciones Virtual)
@@ -103,10 +107,8 @@ Route::get('/terminos', [LegalController::class, 'terms'])->name('legal.terms');
 Route::get('/libro-de-reclamaciones', [LegalController::class, 'complaints'])->name('legal.complaints');
 Route::post('/libro-de-reclamaciones', [LegalController::class, 'storeComplaint'])->middleware('throttle:5,1')->name('legal.complaints.store');
 
-// Consulta RENIEC por DNI vía apiperu.dev + Manual de Uso (Web y PDF)
+// Consulta RENIEC por DNI vía apiperu.dev
 Route::post('/api/dni/consultar', DniLookupController::class)->middleware('throttle:20,1')->name('dni.lookup');
-Route::get('/manual', [ManualController::class, 'index'])->name('manual.index');
-Route::get('/manual/pdf', [ManualController::class, 'pdf'])->name('manual.pdf');
 
 // Panel de Administración por Rol
 $adminRoles = implode(',', UserRole::backofficeRoles());
@@ -191,5 +193,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', "role:{$adminRoles}"
         Route::get('/configuracion', [AdminSettingController::class, 'index'])->name('settings.index');
         Route::put('/configuracion', [AdminSettingController::class, 'update'])->name('settings.update');
         Route::post('/configuracion/probar-dni', [AdminSettingController::class, 'testDni'])->name('settings.test_dni');
+        Route::post('/configuracion/backup', [AdminSettingController::class, 'backup'])->name('settings.backup');
+        Route::get('/configuracion/backup/{filename}', [AdminSettingController::class, 'downloadSavedBackup'])->name('settings.backup.download');
+        Route::post('/configuracion/blanquear', [AdminSettingController::class, 'wipe'])->name('settings.wipe');
+        Route::post('/configuracion/datos-ejemplo', [AdminSettingController::class, 'seedDemo'])->name('settings.seed_demo');
     });
 });
