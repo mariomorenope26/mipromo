@@ -1,0 +1,27 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class CommunityPollOption extends Model
+{
+    protected $fillable = [
+        'poll_id',
+        'label',
+        'votes_count',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'votes_count' => 'integer',
+        ];
+    }
+
+    public function poll(): BelongsTo
+    {
+        return $this->belongsTo(CommunityPoll::class, 'poll_id');
+    }
+}

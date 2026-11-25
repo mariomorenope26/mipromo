@@ -1,0 +1,16 @@
+<IfModule mod_rewrite.c>
+    Options -Indexes
+    RewriteEngine On
+
+    # Bloquear acceso directo a archivos sensibles en shared hosting (BanaHosting)
+    RewriteRule ^(\.env|\.env\..*|\.git.*|composer\.(json|lock)|package(-lock)?\.json|phpunit\.xml|artisan|vite\.config\.js)$ - [F,L]
+    RewriteRule ^(app|bootstrap|config|database|resources|routes|storage|tests|vendor)(/.*)?$ - [F,L]
+
+    # Enrutar solicitudes hacia public/ cuando el dominio apunta a la raíz
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 320" fill="none">
+  <rect width="400" height="320" rx="20" fill="#EFF6FF"/>
+  <path d="M125 65L160 50C172 62 186 68 200 68C214 68 228 62 240 50L275 65L315 110L280 140L265 120V265H135V120L120 140L85 110L125 65Z" fill="#1D3557" stroke="#0F2D4A" stroke-width="4"/>
+  <path d="M160 50C172 68 186 76 200 76C214 76 228 68 240 50" stroke="#F59E0B" stroke-width="6" stroke-linecap="round"/>
+  <path d="M125 65L85 110L120 140L135 120V92" fill="#E2E8F0"/>
+  <path d="M275 65L315 110L280 140L265 120V92" fill="#E2E8F0"/>
+  <rect x="197" y="76" width="6" height="189" fill="#F59E0B"/>
+  <circle cx="168" cy="130" r="18" fill="#F59E0B" opacity="0.9"/>
+  <text x="168" y="135" text-anchor="middle" fill="#0F2D4A" font-family="sans-serif" font-weight="bold" font-size="13">06</text>
+  <rect x="148" y="218" width="104" height="22" rx="6" fill="#0F2D4A"/>
+  <text x="200" y="233" text-anchor="middle" fill="#FFFFFF" font-family="sans-serif" font-weight="bold" font-size="11">PROMOCIÓN</text>
+</svg>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 320" fill="none">
+  <rect width="400" height="320" rx="20" fill="#F8FAFC"/>
+  <circle cx="200" cy="86" r="24" stroke="#64748B" stroke-width="7"/>
+  <rect x="194" y="106" width="12" height="26" rx="4" fill="#94A3B8"/>
+  <path d="M148 134H252V198C252 232 200 262 200 262C200 262 148 232 148 198V134Z" fill="#1D70B8" stroke="#0F2D4A" stroke-width="5"/>
+  <path d="M164 150H236V195C236 220 200 242 200 242C200 242 164 220 164 195V150Z" fill="#FFFFFF" opacity="0.95"/>
+  <text x="200" y="198" text-anchor="middle" fill="#0F2D4A" font-family="serif" font-weight="bold" font-size="20">JMS</text>
+</svg>
