@@ -93,7 +93,7 @@
 
     {{-- Contenido con TOC Lateral Fijo --}}
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 grid lg:grid-cols-12 gap-8 items-start">
-        <aside class="lg:col-span-3 lg:sticky lg:top-36 bg-white rounded-2xl border border-slate-200 p-4 space-y-2 shadow-sm print:hidden">
+        <aside class="lg:col-span-3 min-w-0 lg:sticky lg:top-36 bg-white rounded-2xl border border-slate-200 p-4 space-y-2 shadow-sm print:hidden">
             <p class="text-xs font-extrabold uppercase tracking-wider text-[#1D70B8] px-2 pb-1 border-b border-slate-100">Índice de Capítulos</p>
             <nav class="space-y-1 max-h-[65vh] overflow-y-auto pr-1 text-xs">
                 @foreach($sections as $section)
@@ -110,7 +110,7 @@
             </nav>
         </aside>
 
-        <div class="lg:col-span-9 space-y-10">
+        <div class="lg:col-span-9 min-w-0 space-y-10">
             @foreach($sections as $section)
                 <article id="cap-{{ $section['id'] }}"
                          x-show="matches(@js($section['title'].' '.$section['route']), @js($section['audience']), @js($section['summary'].' '.implode(' ', $section['steps'])))"

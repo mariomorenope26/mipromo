@@ -57,7 +57,7 @@
 
     <div class="grid lg:grid-cols-12 gap-6">
         {{-- Pedidos recientes --}}
-        <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
+        <div class="lg:col-span-7 min-w-0 bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 space-y-4">
             <div class="flex items-center justify-between">
                 <h2 class="font-extrabold text-[#0F2D4A]">Últimos Pedidos</h2>
                 <a href="{{ route('admin.orders.index') }}" class="text-xs font-bold text-[#1D70B8] hover:underline">Ver todos →</a>
@@ -89,7 +89,7 @@
         </div>
 
         {{-- Alertas de stock bajo + Comisiones --}}
-        <div class="lg:col-span-5 space-y-6">
+        <div class="lg:col-span-5 min-w-0 space-y-6">
             <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-3">
                 <h2 class="font-extrabold text-[#0F2D4A]">Alertas de Stock Bajo</h2>
                 @forelse($lowStockVariants as $variant)

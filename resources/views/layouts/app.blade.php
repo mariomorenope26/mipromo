@@ -2,8 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+    @include('components.pwa-head')
     <meta name="description" content="@yield('meta_description', 'Tienda peruana en línea de prendas, casacas, polos Pima y souvenirs personalizados por colegio y promoción. Paga con Yape, Plin o Tarjeta con comprobante SUNAT — Grupo JMSPERU.')">
     <meta property="og:title" content="@yield('title', 'MiPromo | Tienda Online de Egresados — Grupo JMSPERU')">
     <meta property="og:description" content="@yield('meta_description', 'Compra online productos personalizados de tu colegio, aprovecha tarifa ex-alumno y envíos nacionales con SUNAT.')">
@@ -221,5 +220,6 @@
 
     @include('components.footer')
     @include('components.dni-helper')
+    @include('components.pwa-register')
 </body>
 </html>

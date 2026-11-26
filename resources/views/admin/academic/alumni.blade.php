@@ -4,36 +4,36 @@
 @section('subheading', 'Valida solicitudes de egresados y carga listados históricos desde Excel/CSV')
 
 @section('content')
-<div class="space-y-6">
+<div class="space-y-6 min-w-0">
     <div class="grid lg:grid-cols-12 gap-6 items-start">
         {{-- Registro Individual de Ex-Alumno con Búsqueda DNI apiperu.dev --}}
         <form action="{{ route('admin.alumni.store') }}" method="POST"
               x-data="{ dni: '', fullName: '', loadingDni: false, dniMsg: '', dniOk: false }"
-              class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
+              class="lg:col-span-7 min-w-0 bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 space-y-4">
             @csrf
-            <div class="flex items-center justify-between gap-2">
+            <div class="flex flex-wrap items-center justify-between gap-2">
                 <h2 class="font-extrabold text-[#0F2D4A]">Registrar Ex-Alumno por DNI (apiperu.dev)</h2>
                 <span class="px-2.5 py-0.5 rounded-full bg-sky-50 text-[#1D70B8] text-[10px] font-bold">RENIEC Directo</span>
             </div>
 
             <div class="grid sm:grid-cols-3 gap-3 text-sm">
-                <div class="sm:col-span-2">
+                <div class="sm:col-span-2 min-w-0">
                     <label class="block text-xs font-bold text-slate-700 mb-1">Institución Educativa *</label>
-                    <select name="institution_id" required class="w-full px-3 py-2 rounded-xl border border-slate-300">
+                    <select name="institution_id" required class="w-full min-w-0 px-3 py-2 rounded-xl border border-slate-300">
                         @foreach($institutions as $inst)
                             <option value="{{ $inst->id }}">{{ $inst->name }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div>
+                <div class="min-w-0">
                     <label class="block text-xs font-bold text-slate-700 mb-1">Año Promoción *</label>
-                    <input type="number" name="graduation_year" required value="2006" class="w-full px-3 py-2 rounded-xl border border-slate-300">
+                    <input type="number" name="graduation_year" required value="2006" class="w-full min-w-0 px-3 py-2 rounded-xl border border-slate-300">
                 </div>
 
-                <div class="sm:col-span-1">
+                <div class="sm:col-span-1 min-w-0">
                     <label class="block text-xs font-bold text-slate-700 mb-1">DNI *</label>
-                    <div class="flex gap-1.5">
-                        <input type="text" name="dni" x-model="dni" maxlength="8" inputmode="numeric" required placeholder="8 dígitos" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-mono">
+                    <div class="flex gap-1.5 min-w-0">
+                        <input type="text" name="dni" x-model="dni" maxlength="8" inputmode="numeric" required placeholder="8 dígitos" class="w-full min-w-0 px-3 py-2 rounded-xl border border-slate-300 font-mono">
                         <button type="button"
                                 :disabled="loadingDni"
                                 @click="loadingDni = true; dniMsg = ''; const r = await window.miPromoLookupDni(dni, { onSuccess: d => { fullName = d.full_name; } }); loadingDni = false; dniOk = !!r.ok; dniMsg = r.message || '';"
@@ -42,15 +42,15 @@
                         </button>
                     </div>
                 </div>
-                <div class="sm:col-span-2">
+                <div class="sm:col-span-2 min-w-0">
                     <label class="block text-xs font-bold text-slate-700 mb-1">Nombres y Apellidos *</label>
-                    <input type="text" name="full_name" x-model="fullName" required placeholder="Se autocompleta con API Perú" class="w-full px-3 py-2 rounded-xl border border-slate-300">
+                    <input type="text" name="full_name" x-model="fullName" required placeholder="Se autocompleta con API Perú" class="w-full min-w-0 px-3 py-2 rounded-xl border border-slate-300">
                 </div>
                 <p x-show="dniMsg" x-text="dniMsg" :class="dniOk ? 'text-emerald-700' : 'text-amber-700'" class="sm:col-span-3 text-[11px] font-semibold"></p>
 
-                <input type="text" name="current_city" required value="Lima" placeholder="Ciudad actual" class="px-3 py-2 rounded-xl border border-slate-300">
-                <input type="email" name="email" placeholder="Correo (opcional)" class="px-3 py-2 rounded-xl border border-slate-300">
-                <input type="text" name="profession" placeholder="Profesión (opcional)" class="px-3 py-2 rounded-xl border border-slate-300">
+                <input type="text" name="current_city" required value="Lima" placeholder="Ciudad actual" class="w-full min-w-0 px-3 py-2 rounded-xl border border-slate-300">
+                <input type="email" name="email" placeholder="Correo (opcional)" class="w-full min-w-0 px-3 py-2 rounded-xl border border-slate-300">
+                <input type="text" name="profession" placeholder="Profesión (opcional)" class="w-full min-w-0 px-3 py-2 rounded-xl border border-slate-300">
             </div>
 
             <div class="flex flex-wrap items-center justify-between gap-3">
@@ -64,34 +64,34 @@
             </div>
         </form>
 
-        <form action="{{ route('admin.alumni.import') }}" method="POST" enctype="multipart/form-data" class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
+        <form action="{{ route('admin.alumni.import') }}" method="POST" enctype="multipart/form-data" class="lg:col-span-5 min-w-0 bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 space-y-4">
             @csrf
             <h2 class="font-extrabold text-[#0F2D4A]">Importación Masiva desde CSV</h2>
-            <p class="text-xs text-slate-500">Columnas esperadas: <code>nombre_completo,dni,anio_egreso,ciudad,email,profesion</code> (detecta duplicados automáticamente).</p>
+            <p class="text-xs text-slate-500">Columnas esperadas: <code class="break-all">nombre_completo,dni,anio_egreso,ciudad,email,profesion</code> (detecta duplicados automáticamente).</p>
             <div class="space-y-3 text-sm">
-                <select name="institution_id" required class="w-full px-3.5 py-2 rounded-xl border border-slate-300">
+                <select name="institution_id" required class="w-full min-w-0 px-3.5 py-2 rounded-xl border border-slate-300">
                     @foreach($institutions as $inst)
                         <option value="{{ $inst->id }}">{{ $inst->name }}</option>
                     @endforeach
                 </select>
-                <input type="file" name="csv_file" required accept=".csv,.txt" class="text-xs block w-full">
+                <input type="file" name="csv_file" required accept=".csv,.txt" class="text-xs block w-full min-w-0">
                 <button type="submit" class="w-full px-5 py-2.5 rounded-xl bg-[#1D70B8] hover:bg-[#0F2D4A] text-white text-xs font-bold transition">Importar Padrón CSV</button>
             </div>
         </form>
     </div>
 
-    <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4 overflow-x-auto">
+    <div class="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 space-y-4 min-w-0">
         <form method="GET" action="{{ route('admin.alumni.index') }}" class="flex flex-wrap items-center justify-between gap-3">
             <h2 class="font-extrabold text-[#0F2D4A]">Listado del Padrón ({{ $alumni->total() }})</h2>
-            <div class="flex flex-wrap gap-2 text-xs">
-                <input type="text" name="q" value="{{ request('q') }}" placeholder="Buscar por DNI, nombre o correo..." class="px-3.5 py-2 rounded-xl border border-slate-300">
-                <select name="institution_id" class="px-3 py-2 rounded-xl border border-slate-300">
+            <div class="flex flex-wrap gap-2 text-xs w-full sm:w-auto">
+                <input type="text" name="q" value="{{ request('q') }}" placeholder="Buscar por DNI, nombre o correo..." class="w-full sm:w-auto min-w-0 px-3.5 py-2 rounded-xl border border-slate-300">
+                <select name="institution_id" class="w-full sm:w-auto min-w-0 px-3 py-2 rounded-xl border border-slate-300">
                     <option value="">Todos los colegios</option>
                     @foreach($institutions as $inst)
                         <option value="{{ $inst->id }}" @selected((int) request('institution_id') === $inst->id)>{{ $inst->short_name }}</option>
                     @endforeach
                 </select>
-                <select name="status" class="px-3 py-2 rounded-xl border border-slate-300">
+                <select name="status" class="w-full sm:w-auto min-w-0 px-3 py-2 rounded-xl border border-slate-300">
                     <option value="">Todos los estados</option>
                     <option value="verified" @selected(request('status') === 'verified')>Verificados</option>
                     <option value="pending" @selected(request('status') === 'pending')>Pendientes</option>
@@ -102,6 +102,7 @@
             </div>
         </form>
 
+        <div class="overflow-x-auto">
         <table class="w-full text-xs">
             <thead class="bg-slate-50 text-left text-slate-500 uppercase">
                 <tr>
@@ -145,6 +146,7 @@
                 @endforeach
             </tbody>
         </table>
+        </div>
         <div class="mt-4">{{ $alumni->links() }}</div>
     </div>
 </div>

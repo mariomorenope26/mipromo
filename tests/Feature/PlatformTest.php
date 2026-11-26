@@ -1003,3 +1003,25 @@ it('serves system settings and config views without incomplete-object errors und
     Config::set('cache.default', 'array');
     Cache::setDefaultDriver('array');
 });
+
+it('exposes complete PWA manifest, offline fallback, valid icons, and mobile-ready layout tags', function () {
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertSee('manifest.webmanifest')
+        ->assertSee('apple-touch-icon.png')
+        ->assertSee('theme-color')
+        ->assertSee("navigator.serviceWorker.register('/sw.js'", false);
+
+    expect(is_file(public_path('sw.js')))->toBeTrue();
+    expect(is_file(public_path('offline.html')))->toBeTrue();
+    expect(filesize(public_path('favicon.ico')))->toBeGreaterThan(100);
+
+    $manifest = json_decode((string) file_get_contents(public_path('manifest.webmanifest')), true);
+    expect($manifest)->toBeArray();
+    expect($manifest['display'])->toBe('standalone');
+    expect($manifest['start_url'])->toBe('/?source=pwa');
+
+    foreach ($manifest['icons'] as $icon) {
+        expect(is_file(public_path(ltrim($icon['src'], '/'))))->toBeTrue();
+    }
+});

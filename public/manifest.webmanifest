@@ -1,0 +1,87 @@
+{
+  "id": "/",
+  "name": "MiPromo — Tienda Oficial de Egresados | Grupo JMSPERU",
+  "short_name": "MiPromo",
+  "description": "Tienda peruana en línea de casacas, polos Pima, anillos, medallas y recuerdos personalizados por colegio y promoción. Paga con Yape, Plin o Tarjeta con comprobante SUNAT.",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0F2D4A",
+  "theme_color": "#0F2D4A",
+  "lang": "es-PE",
+  "dir": "ltr",
+  "categories": ["shopping", "education", "social"],
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/maskable-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Tienda y Catálogo",
+      "short_name": "Tienda",
+      "description": "Explorar casacas, polos, anillos y souvenirs personalizados",
+      "url": "/tienda",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Campañas Grupales",
+      "short_name": "Campañas",
+      "description": "Unirse a preventas de promoción con adelanto",
+      "url": "/campanas",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Directorio de Egresados",
+      "short_name": "Egresados",
+      "description": "Buscar compañeros de promoción y registrar DNI",
+      "url": "/egresados",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Seguimiento de Pedidos",
+      "short_name": "Pedidos",
+      "description": "Consultar estado de entrega y comprobante SUNAT",
+      "url": "/seguimiento",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/icons/screenshot-mobile.jpg",
+      "sizes": "390x844",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Tienda MiPromo optimizada para celulares"
+    },
+    {
+      "src": "/images/manual/01-home-tienda.jpg",
+      "sizes": "1200x750",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "Escaparate principal y catálogo oficial MiPromo"
+    }
+  ]
+}

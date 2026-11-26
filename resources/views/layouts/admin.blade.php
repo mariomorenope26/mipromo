@@ -2,19 +2,21 @@
 <html lang="es">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
+    @include('components.pwa-head')
     <title>@yield('title', 'Panel Administrativo — Grupo JMSPERU')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-screen flex flex-col bg-slate-100 text-slate-900">
+<body class="min-h-screen flex flex-col bg-slate-100 text-slate-900" x-data="{ adminMenuOpen: false }">
     <div class="flex-1 flex flex-col lg:flex-row">
         {{-- Sidebar --}}
         <aside class="w-full lg:w-68 bg-[#0F2D4A] text-white shrink-0 flex flex-col">
-            <div class="p-5 border-b border-white/10 flex items-center justify-between lg:block">
-                <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 bg-white rounded-xl p-2.5">
-                    <img src="{{ asset('images/logo_jmsperu.png') }}" alt="Grupo JMSPERU" class="h-9 w-auto object-contain">
+            <div class="p-4 sm:p-5 border-b border-white/10 flex items-center justify-between gap-3 lg:block">
+                <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 bg-white rounded-xl p-2 sm:p-2.5 shrink-0">
+                    <img src="{{ asset('images/logo_jmsperu.png') }}" alt="Grupo JMSPERU" class="h-8 sm:h-9 w-auto object-contain">
                 </a>
+                <button type="button" @click="adminMenuOpen = !adminMenuOpen" class="lg:hidden inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold text-white">
+                    <span x-text="adminMenuOpen ? '✕ Cerrar Menú' : '☰ Menú Admin'"></span>
+                </button>
                 <div class="mt-3 hidden lg:block">
                     <p class="text-xs uppercase tracking-wider text-sky-300 font-semibold">Gestión Multi-Rol</p>
                     <p class="text-sm font-bold truncate">{{ auth()->user()->name }}</p>
@@ -22,7 +24,7 @@
                 </div>
             </div>
 
-            <nav class="p-4 space-y-1 text-sm flex-1 overflow-y-auto">
+            <nav :class="adminMenuOpen ? 'block' : 'hidden lg:block'" class="p-4 space-y-1 text-sm flex-1 overflow-y-auto">
                 <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl {{ request()->routeIs('admin.dashboard') ? 'bg-[#1D70B8] text-white font-semibold' : 'text-slate-300 hover:bg-white/10' }}">
                     <span>Dashboard y KPIs</span>
                 </a>
@@ -79,7 +81,7 @@
                 </div>
             </nav>
 
-            <div class="p-4 border-t border-white/10 space-y-2">
+            <div :class="adminMenuOpen ? 'block' : 'hidden lg:block'" class="p-4 border-t border-white/10 space-y-2">
                 <a href="{{ route('home') }}" class="block text-center w-full py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold">Volver a la Tienda</a>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
@@ -90,12 +92,12 @@
 
         {{-- Content --}}
         <div class="flex-1 flex flex-col min-w-0">
-            <header class="bg-white border-b border-slate-200 px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+            <header class="bg-white border-b border-slate-200 px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-4">
                 <div>
-                    <h1 class="text-xl font-bold text-[#0F2D4A]">@yield('heading', 'Administración MiPromo')</h1>
+                    <h1 class="text-lg sm:text-xl font-bold text-[#0F2D4A]">@yield('heading', 'Administración MiPromo')</h1>
                     <p class="text-xs text-slate-500">@yield('subheading', 'Operación multi-institución y control de tienda')</p>
                 </div>
-                <div class="flex items-center gap-3 text-xs">
+                <div class="flex flex-wrap items-center gap-2 sm:gap-3 text-xs">
                     @if(auth()->user()->isRole('super_admin'))
                         <a href="{{ route('admin.settings.index') }}" class="px-3 py-2 rounded-lg border border-sky-200 bg-sky-50 hover:bg-sky-100 text-[#0F2D4A] font-semibold">Configuración API DNI</a>
                         <a href="{{ route('admin.reports.index') }}" class="px-3 py-2 rounded-lg bg-[#0F2D4A] hover:bg-[#1D70B8] text-white font-semibold">10 Reportes Gerenciales</a>
@@ -124,7 +126,7 @@
                 @endif
             </div>
 
-            <main class="flex-1 p-6">
+            <main class="flex-1 p-4 sm:p-6 min-w-0">
                 @yield('content')
             </main>
 
@@ -132,5 +134,6 @@
         </div>
     </div>
     @include('components.dni-helper')
+    @include('components.pwa-register')
 </body>
 </html>

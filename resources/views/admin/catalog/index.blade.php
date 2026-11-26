@@ -38,7 +38,7 @@
         {{-- Registrar Nuevo Producto con Compra / Venta y Proveedor --}}
         <form action="{{ route('admin.catalog.products.store') }}" method="POST" enctype="multipart/form-data"
               x-data="{ purchase: 60, sale: 120 }"
-              class="lg:col-span-8 bg-white rounded-2xl border border-slate-200 p-6 space-y-5">
+              class="lg:col-span-8 min-w-0 bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 space-y-5">
             @csrf
             <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
                 <div>
@@ -166,7 +166,7 @@
         </form>
 
         {{-- Panel Lateral: Cupones y Categorías --}}
-        <div class="lg:col-span-4 space-y-6">
+        <div class="lg:col-span-4 min-w-0 space-y-6">
             <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
                 <h2 class="font-extrabold text-[#0F2D4A]">Cupones Promocionales</h2>
                 <form action="{{ route('admin.catalog.coupons.store') }}" method="POST" class="space-y-3 text-xs">
@@ -293,11 +293,11 @@
                     $profit = $product->profitAmount();
                     $margin = $product->marginPercent();
                 @endphp
-                <div class="rounded-2xl border {{ $product->is_active ? 'border-slate-200 bg-white' : 'border-rose-200 bg-rose-50/30' }} p-4 space-y-3">
-                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                        <div class="flex items-start gap-3.5">
+                <div class="rounded-2xl border {{ $product->is_active ? 'border-slate-200 bg-white' : 'border-rose-200 bg-rose-50/30' }} p-4 space-y-3 min-w-0">
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 min-w-0">
+                        <div class="flex items-start gap-3.5 min-w-0">
                             <img src="{{ asset(ltrim($product->image_path ?? 'images/products/polo.jpg', '/')) }}" alt="{{ $product->name }}" class="w-16 h-16 rounded-xl object-cover border border-slate-200 shrink-0">
-                            <div>
+                            <div class="min-w-0 flex-1">
                                 <div class="flex flex-wrap items-center gap-1.5">
                                     <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-bold">{{ $product->sku_prefix }}</span>
                                     <h3 class="font-extrabold text-slate-900">{{ $product->name }}</h3>
@@ -362,7 +362,7 @@
                     {{-- Stock rápido por variante --}}
                     <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-2 pt-2 border-t border-slate-100">
                         @foreach($product->variants as $variant)
-                            <form action="{{ route('admin.catalog.variants.stock', $variant->id) }}" method="POST" class="flex items-center justify-between gap-2 bg-slate-50 rounded-lg p-2.5 text-xs border {{ $variant->isLowStock() ? 'border-amber-300 bg-amber-50/40' : 'border-slate-100' }}">
+                            <form action="{{ route('admin.catalog.variants.stock', $variant->id) }}" method="POST" class="min-w-0 flex items-center justify-between gap-2 bg-slate-50 rounded-lg p-2.5 text-xs border {{ $variant->isLowStock() ? 'border-amber-300 bg-amber-50/40' : 'border-slate-100' }}">
                                 @csrf
                                 @method('PATCH')
                                 <div class="min-w-0">

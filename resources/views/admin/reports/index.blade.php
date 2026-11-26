@@ -75,7 +75,7 @@
         </div>
 
         <div class="grid md:grid-cols-2 gap-6">
-            <div class="space-y-3">
+            <div class="space-y-3 min-w-0">
                 <h3 class="text-xs font-extrabold uppercase text-slate-500">Hitos Estratégicos del Propósito</h3>
                 @foreach($purposeProgress['milestones'] as $m)
                     <div class="space-y-1 text-xs">
@@ -90,30 +90,32 @@
                 @endforeach
             </div>
 
-            <div>
+            <div class="min-w-0">
                 <h3 class="text-xs font-extrabold uppercase text-slate-500 mb-3">Cobertura Regional (>10 años de trayectoria)</h3>
-                <table class="w-full text-xs">
-                    <thead class="bg-slate-50 text-slate-500 uppercase text-left">
-                        <tr>
-                            <th class="p-2">Región</th>
-                            <th class="p-2">Colegios</th>
-                            <th class="p-2">Publicados</th>
-                            <th class="p-2">Antigüedad Prom.</th>
-                            <th class="p-2">Delegados</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        @foreach($regionalCoverage as $row)
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs">
+                        <thead class="bg-slate-50 text-slate-500 uppercase text-left">
                             <tr>
-                                <td class="p-2 font-bold text-[#0F2D4A]">{{ $row['region'] }}</td>
-                                <td class="p-2">{{ $row['total'] }}</td>
-                                <td class="p-2 font-bold text-emerald-700">{{ $row['published'] }}</td>
-                                <td class="p-2">{{ $row['avg_years'] }} años</td>
-                                <td class="p-2">{{ $row['delegates'] }}</td>
+                                <th class="p-2">Región</th>
+                                <th class="p-2">Colegios</th>
+                                <th class="p-2">Publicados</th>
+                                <th class="p-2">Antigüedad Prom.</th>
+                                <th class="p-2">Delegados</th>
                             </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @foreach($regionalCoverage as $row)
+                                <tr>
+                                    <td class="p-2 font-bold text-[#0F2D4A]">{{ $row['region'] }}</td>
+                                    <td class="p-2">{{ $row['total'] }}</td>
+                                    <td class="p-2 font-bold text-emerald-700">{{ $row['published'] }}</td>
+                                    <td class="p-2">{{ $row['avg_years'] }} años</td>
+                                    <td class="p-2">{{ $row['delegates'] }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </section>
@@ -218,7 +220,7 @@
 
     <div class="grid lg:grid-cols-2 gap-6">
         {{-- REPORTE 4: CAMPAÑAS GRUPALES --}}
-        <section id="rep-4" class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
+        <section id="rep-4" class="min-w-0 bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 space-y-4">
             <div class="border-b border-slate-100 pb-3">
                 <span class="text-[11px] font-bold uppercase tracking-wider text-amber-600">Reporte Gerencial 04</span>
                 <h2 class="text-lg font-extrabold text-[#0F2D4A]">Cumplimiento de Campañas Grupales</h2>
@@ -246,7 +248,7 @@
         </section>
 
         {{-- REPORTE 5: RANKING DE PROVEEDORES --}}
-        <section id="rep-5" class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
+        <section id="rep-5" class="min-w-0 bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 space-y-4">
             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div>
                     <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Reporte Gerencial 05</span>
@@ -303,34 +305,36 @@
         </div>
 
         <div class="grid lg:grid-cols-2 gap-6 text-xs">
-            <div>
+            <div class="min-w-0">
                 <h3 class="font-bold uppercase text-slate-500 mb-2">Stock por Categoría</h3>
-                <table class="w-full">
-                    <thead class="bg-slate-50 text-slate-500 uppercase text-left">
-                        <tr><th class="p-2">Categoría</th><th class="p-2 text-right">Productos</th><th class="p-2 text-right">Unidades</th><th class="p-2 text-right">Valor Costo</th></tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        @foreach($stockByCategory as $sc)
-                            <tr>
-                                <td class="p-2 font-bold">{{ $sc['name'] }}</td>
-                                <td class="p-2 text-right">{{ $sc['products'] }}</td>
-                                <td class="p-2 text-right">{{ $sc['units'] }}</td>
-                                <td class="p-2 text-right font-bold">S/ {{ number_format($sc['valuation_cost'], 2) }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-slate-50 text-slate-500 uppercase text-left">
+                            <tr><th class="p-2">Categoría</th><th class="p-2 text-right">Productos</th><th class="p-2 text-right">Unidades</th><th class="p-2 text-right">Valor Costo</th></tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @foreach($stockByCategory as $sc)
+                                <tr>
+                                    <td class="p-2 font-bold">{{ $sc['name'] }}</td>
+                                    <td class="p-2 text-right">{{ $sc['products'] }}</td>
+                                    <td class="p-2 text-right">{{ $sc['units'] }}</td>
+                                    <td class="p-2 text-right font-bold">S/ {{ number_format($sc['valuation_cost'], 2) }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div>
+            <div class="min-w-0">
                 <h3 class="font-bold uppercase text-slate-500 mb-2">Variantes en Riesgo de Reposición</h3>
                 <div class="space-y-2">
                     @forelse($criticalStockVariants as $variant)
-                        <div class="flex items-center justify-between p-2.5 rounded-xl bg-amber-50 border border-amber-200">
-                            <div>
-                                <p class="font-bold text-slate-900">{{ $variant->product?->name }}</p>
-                                <p class="text-slate-600">{{ $variant->sku }} · {{ $variant->product?->vendor?->business_name ?? 'Directo' }}</p>
+                        <div class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-amber-50 border border-amber-200">
+                            <div class="min-w-0">
+                                <p class="font-bold text-slate-900 truncate">{{ $variant->product?->name }}</p>
+                                <p class="text-slate-600 truncate">{{ $variant->sku }} · {{ $variant->product?->vendor?->business_name ?? 'Directo' }}</p>
                             </div>
-                            <span class="px-2.5 py-1 rounded-full bg-amber-600 text-white font-bold">{{ $variant->stock }} uds</span>
+                            <span class="px-2.5 py-1 rounded-full bg-amber-600 text-white font-bold shrink-0">{{ $variant->stock }} uds</span>
                         </div>
                     @empty
                         <p class="text-slate-500">No hay variantes en nivel crítico.</p>
@@ -342,7 +346,7 @@
 
     <div class="grid lg:grid-cols-2 gap-6">
         {{-- REPORTE 7: PAGOS Y FACTURACIÓN SUNAT --}}
-        <section id="rep-7" class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
+        <section id="rep-7" class="min-w-0 bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 space-y-4">
             <div class="border-b border-slate-100 pb-3">
                 <span class="text-[11px] font-bold uppercase tracking-wider text-[#1D70B8]">Reporte Gerencial 07</span>
                 <h2 class="text-lg font-extrabold text-[#0F2D4A]">Pagos, Conciliación y Facturación Electrónica SUNAT</h2>
@@ -353,38 +357,40 @@
                 <div class="rounded-xl bg-slate-50 p-3"><p class="text-slate-500">Facturas F001</p><p class="text-lg font-black">{{ $sunatSummary['facturas_count'] }}</p></div>
                 <div class="rounded-xl bg-rose-50 p-3"><p class="text-rose-700">Notas Créd. NC01</p><p class="text-lg font-black text-rose-700">{{ $sunatSummary['credit_notes_count'] }}</p></div>
             </div>
-            <div class="rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-xs flex justify-between">
+            <div class="rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-xs flex flex-wrap justify-between gap-2">
                 <span>Gravado: <strong>S/ {{ number_format($sunatSummary['subtotal_gravado'], 2) }}</strong></span>
                 <span>IGV (18%): <strong>S/ {{ number_format($sunatSummary['igv_total'], 2) }}</strong></span>
                 <span>Total Facturado: <strong>S/ {{ number_format($sunatSummary['invoiced_total'], 2) }}</strong></span>
             </div>
 
-            <table class="w-full text-xs">
-                <thead class="bg-slate-50 text-slate-500 uppercase text-left">
-                    <tr><th class="p-2">Método Pago</th><th class="p-2 text-right">Ops</th><th class="p-2 text-right">Conciliado</th><th class="p-2 text-right">Por Revisar</th></tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                    @foreach($paymentsByMethod as $pm)
-                        <tr>
-                            <td class="p-2 font-bold">{{ $pm['method'] }}</td>
-                            <td class="p-2 text-right">{{ $pm['count'] }}</td>
-                            <td class="p-2 text-right text-emerald-700 font-bold">S/ {{ number_format($pm['approved_amount'], 2) }}</td>
-                            <td class="p-2 text-right text-amber-700 font-bold">S/ {{ number_format($pm['pending_amount'], 2) }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs">
+                    <thead class="bg-slate-50 text-slate-500 uppercase text-left">
+                        <tr><th class="p-2">Método Pago</th><th class="p-2 text-right">Ops</th><th class="p-2 text-right">Conciliado</th><th class="p-2 text-right">Por Revisar</th></tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @foreach($paymentsByMethod as $pm)
+                            <tr>
+                                <td class="p-2 font-bold">{{ $pm['method'] }}</td>
+                                <td class="p-2 text-right">{{ $pm['count'] }}</td>
+                                <td class="p-2 text-right text-emerald-700 font-bold">S/ {{ number_format($pm['approved_amount'], 2) }}</td>
+                                <td class="p-2 text-right text-amber-700 font-bold">S/ {{ number_format($pm['pending_amount'], 2) }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         </section>
 
         {{-- REPORTE 8: LOGÍSTICA NACIONAL Y DEVOLUCIONES --}}
-        <section id="rep-8" class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
+        <section id="rep-8" class="min-w-0 bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 space-y-4">
             <div class="border-b border-slate-100 pb-3">
                 <span class="text-[11px] font-bold uppercase tracking-wider text-[#1D70B8]">Reporte Gerencial 08</span>
                 <h2 class="text-lg font-extrabold text-[#0F2D4A]">Logística Nacional, Zonas de Envío y Devoluciones</h2>
             </div>
 
-            <div class="grid grid-cols-2 gap-3 text-xs">
-                <div class="space-y-1.5">
+            <div class="grid sm:grid-cols-2 gap-3 text-xs">
+                <div class="space-y-1.5 min-w-0">
                     <p class="font-bold uppercase text-slate-500">Pedidos por Estado</p>
                     @foreach($logisticsByStatus as $ls)
                         <div class="flex justify-between p-2 rounded-lg bg-slate-50">
@@ -393,7 +399,7 @@
                         </div>
                     @endforeach
                 </div>
-                <div class="space-y-1.5">
+                <div class="space-y-1.5 min-w-0">
                     <p class="font-bold uppercase text-slate-500">Cambios & Devoluciones</p>
                     <div class="p-3 rounded-xl bg-slate-50 space-y-1">
                         <p class="flex justify-between"><span>Total solicitudes:</span><strong>{{ $returnsSummary['total'] }}</strong></p>
@@ -404,27 +410,29 @@
                 </div>
             </div>
 
-            <table class="w-full text-xs">
-                <thead class="bg-slate-50 text-slate-500 uppercase text-left">
-                    <tr><th class="p-2">Zona / Courier</th><th class="p-2">Operador</th><th class="p-2 text-right">Pedidos</th><th class="p-2 text-right">Fletes</th></tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                    @foreach($shippingZonesReport as $sz)
-                        <tr>
-                            <td class="p-2 font-bold">{{ $sz['name'] }}</td>
-                            <td class="p-2">{{ $sz['courier'] }}</td>
-                            <td class="p-2 text-right">{{ $sz['orders_count'] }}</td>
-                            <td class="p-2 text-right font-bold">S/ {{ number_format($sz['shipping_revenue'], 2) }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs">
+                    <thead class="bg-slate-50 text-slate-500 uppercase text-left">
+                        <tr><th class="p-2">Zona / Courier</th><th class="p-2">Operador</th><th class="p-2 text-right">Pedidos</th><th class="p-2 text-right">Fletes</th></tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @foreach($shippingZonesReport as $sz)
+                            <tr>
+                                <td class="p-2 font-bold">{{ $sz['name'] }}</td>
+                                <td class="p-2">{{ $sz['courier'] }}</td>
+                                <td class="p-2 text-right">{{ $sz['orders_count'] }}</td>
+                                <td class="p-2 text-right font-bold">S/ {{ number_format($sz['shipping_revenue'], 2) }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         </section>
     </div>
 
     <div class="grid lg:grid-cols-2 gap-6">
         {{-- REPORTE 9: COMUNIDADES, COLECTAS SOLIDARIAS Y REFERIDOS --}}
-        <section id="rep-9" class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
+        <section id="rep-9" class="min-w-0 bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 space-y-4">
             <div class="border-b border-slate-100 pb-3">
                 <span class="text-[11px] font-bold uppercase tracking-wider text-[#1D70B8]">Reporte Gerencial 09</span>
                 <h2 class="text-lg font-extrabold text-[#0F2D4A]">Comunidades, Colectas Solidarias y Programa de Referidos</h2>
@@ -445,7 +453,7 @@
         </section>
 
         {{-- REPORTE 10: CUMPLIMIENTO LEGAL, CALIDAD Y AUDITORÍA --}}
-        <section id="rep-10" class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
+        <section id="rep-10" class="min-w-0 bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 space-y-4">
             <div class="border-b border-slate-100 pb-3">
                 <span class="text-[11px] font-bold uppercase tracking-wider text-rose-700">Reporte Gerencial 10</span>
                 <h2 class="text-lg font-extrabold text-[#0F2D4A]">Cumplimiento Legal (INDECOPI), Calidad y Auditoría</h2>
