@@ -107,7 +107,7 @@ return new class extends Migration
             $table->decimal('total', 10, 2);
             $table->string('sunat_status', 30)->default('accepted');
             $table->string('sunat_hash', 64)->nullable();
-            $table->timestamp('issued_at');
+            $table->dateTime('issued_at');
             $table->timestamps();
 
             $table->unique(['series', 'correlative']);

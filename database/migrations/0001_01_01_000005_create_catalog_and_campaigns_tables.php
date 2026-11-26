@@ -100,8 +100,8 @@ return new class extends Migration
             $table->unsignedTinyInteger('deposit_percent')->default(50);
             $table->unsignedInteger('target_units');
             $table->unsignedInteger('current_units')->default(0);
-            $table->timestamp('starts_at')->nullable();
-            $table->timestamp('ends_at');
+            $table->dateTime('starts_at')->nullable();
+            $table->dateTime('ends_at');
             $table->string('delivery_mode', 30)->default('consolidated_delegate');
             $table->string('status', 30)->default('active')->index();
             $table->timestamps();

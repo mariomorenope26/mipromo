@@ -86,7 +86,7 @@ return new class extends Migration
             $table->string('title');
             $table->text('description')->nullable();
             $table->string('location');
-            $table->timestamp('starts_at');
+            $table->dateTime('starts_at');
             $table->decimal('ticket_price', 10, 2)->default(0);
             $table->unsignedInteger('max_attendees')->nullable();
             $table->timestamps();

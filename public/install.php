@@ -178,24 +178,40 @@ $installedSuccess = false;
 $cleanupToken = $_SESSION['install_cleanup_token'] ?? bin2hex(random_bytes(16));
 $_SESSION['install_cleanup_token'] = $cleanupToken;
 
+$existingEnv = [];
+if (is_file($envFile) && ! file_exists($lockFile)) {
+    foreach ((array) @file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+        $line = trim((string) $line);
+        if ($line === '' || str_starts_with($line, '#') || ! str_contains($line, '=')) {
+            continue;
+        }
+        [$k, $v] = explode('=', $line, 2);
+        $v = trim($v);
+        if (strlen($v) >= 2 && str_starts_with($v, '"') && str_ends_with($v, '"')) {
+            $v = str_replace(['\\$', '\\"', '\\\\'], ['$', '"', '\\'], substr($v, 1, -1));
+        }
+        $existingEnv[trim($k)] = $v;
+    }
+}
+
 $form = [
-    'app_name' => (string) ($_POST['app_name'] ?? 'MiPromo Egresados Store'),
-    'app_url' => (string) ($_POST['app_url'] ?? $detectedUrl),
-    'db_host' => (string) ($_POST['db_host'] ?? 'localhost'),
-    'db_port' => (string) ($_POST['db_port'] ?? '3306'),
-    'db_database' => (string) ($_POST['db_database'] ?? ''),
-    'db_username' => (string) ($_POST['db_username'] ?? ''),
+    'app_name' => (string) ($_POST['app_name'] ?? ($existingEnv['APP_NAME'] ?? 'MiPromo Egresados Store')),
+    'app_url' => (string) ($_POST['app_url'] ?? ($existingEnv['APP_URL'] ?? $detectedUrl)),
+    'db_host' => (string) ($_POST['db_host'] ?? ($existingEnv['DB_HOST'] ?? 'localhost')),
+    'db_port' => (string) ($_POST['db_port'] ?? ($existingEnv['DB_PORT'] ?? '3306')),
+    'db_database' => (string) ($_POST['db_database'] ?? ($existingEnv['DB_DATABASE'] ?? '')),
+    'db_username' => (string) ($_POST['db_username'] ?? ($existingEnv['DB_USERNAME'] ?? '')),
     'db_password' => (string) ($_POST['db_password'] ?? ''),
-    'mail_host' => (string) ($_POST['mail_host'] ?? 'localhost'),
-    'mail_port' => (string) ($_POST['mail_port'] ?? '465'),
-    'mail_username' => (string) ($_POST['mail_username'] ?? ''),
+    'mail_host' => (string) ($_POST['mail_host'] ?? ($existingEnv['MAIL_HOST'] ?? 'localhost')),
+    'mail_port' => (string) ($_POST['mail_port'] ?? ($existingEnv['MAIL_PORT'] ?? '465')),
+    'mail_username' => (string) ($_POST['mail_username'] ?? ($existingEnv['MAIL_USERNAME'] ?? '')),
     'mail_password' => (string) ($_POST['mail_password'] ?? ''),
-    'mail_from_address' => (string) ($_POST['mail_from_address'] ?? ''),
+    'mail_from_address' => (string) ($_POST['mail_from_address'] ?? ($existingEnv['MAIL_FROM_ADDRESS'] ?? '')),
     'admin_name' => (string) ($_POST['admin_name'] ?? 'Julio Moreno (Grupo JMSPERU)'),
     'admin_email' => (string) ($_POST['admin_email'] ?? 'admin@jmsperu.pe'),
     'admin_phone' => (string) ($_POST['admin_phone'] ?? '959199368'),
     'apiperu_token' => (string) ($_POST['apiperu_token'] ?? ''),
-    'apiperu_endpoint' => (string) ($_POST['apiperu_endpoint'] ?? 'https://api.apiperu.dev/dni'),
+    'apiperu_endpoint' => (string) ($_POST['apiperu_endpoint'] ?? ($existingEnv['APIPERU_ENDPOINT'] ?? 'https://api.apiperu.dev/dni')),
     'seed_mode' => (string) ($_POST['seed_mode'] ?? 'production'),
 ];
 
@@ -456,7 +472,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Instalador MiPromo v2.2 — Hosting BanaHosting cPanel</title>
+    <title>Instalador MiPromo v2.3 — Hosting BanaHosting cPanel</title>
     <style>
         *{box-sizing:border-box}
         body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f1f5f9;color:#0f2d4a;line-height:1.5}
@@ -487,7 +503,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 <div class="wrap">
     <div class="header">
         <div>
-            <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#fde047">Despliegue cPanel BanaHosting · v2.2</div>
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#fde047">Despliegue cPanel BanaHosting · v2.3</div>
             <h1>Instalador Web MiPromo Egresados Store</h1>
             <p style="margin:6px 0 0;font-size:13px;opacity:.9">Configura MySQL, SMTP, Endpoint &amp; Token API Perú (DNI), modo de datos y Superadmin real en minutos.</p>
         </div>
