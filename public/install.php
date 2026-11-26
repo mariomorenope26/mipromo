@@ -124,10 +124,20 @@ $scheme = (! empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SER
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 $detectedUrl = rtrim($scheme.'://'.$host.($appBaseHref === '' ? '' : $appBaseHref), '/');
 
+$requiredPhpVersion = '8.3.0';
+$platformCheckPath = $baseDir.'/vendor/composer/platform_check.php';
+if (is_file($platformCheckPath)) {
+    $platformCheckBody = (string) @file_get_contents($platformCheckPath);
+    if (preg_match('/PHP_VERSION_ID\s*>=\s*(\d{5})/', $platformCheckBody, $m)) {
+        $id = (int) $m[1];
+        $requiredPhpVersion = sprintf('%d.%d.%d', intdiv($id, 10000), intdiv($id % 10000, 100), $id % 100);
+    }
+}
+
 $checks = [
     'php_version' => [
-        'label' => 'Versión de PHP >= 8.2 (actual: '.PHP_VERSION.')',
-        'ok' => version_compare(PHP_VERSION, '8.2.0', '>='),
+        'label' => "Versión de PHP >= {$requiredPhpVersion} (actual: ".PHP_VERSION.')',
+        'ok' => version_compare(PHP_VERSION, $requiredPhpVersion, '>='),
     ],
     'vendor' => [
         'label' => 'Dependencias PHP (vendor/autoload.php)',
@@ -333,7 +343,13 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                     'APIPERU_ENDPOINT', 'APIPERU_TOKEN',
                 ]);
 
+                $obLevel = ob_get_level();
+                ob_start();
                 require $baseDir.'/vendor/autoload.php';
+                while (ob_get_level() > $obLevel) {
+                    @ob_end_clean();
+                }
+
                 $app = require $baseDir.'/bootstrap/app.php';
                 $kernel = $app->make(Kernel::class);
                 $kernel->bootstrap();
@@ -424,6 +440,11 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
                 $_SESSION['install_just_completed'] = true;
                 $installedSuccess = true;
             } catch (Throwable $e) {
+                if (isset($obLevel)) {
+                    while (ob_get_level() > $obLevel) {
+                        @ob_end_clean();
+                    }
+                }
                 $errors[] = 'Error ejecutando migración / instalación Laravel: '.$e->getMessage();
             }
         }
@@ -435,7 +456,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Instalador MiPromo v2.1 — Hosting BanaHosting cPanel</title>
+    <title>Instalador MiPromo v2.2 — Hosting BanaHosting cPanel</title>
     <style>
         *{box-sizing:border-box}
         body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f1f5f9;color:#0f2d4a;line-height:1.5}
@@ -466,7 +487,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 <div class="wrap">
     <div class="header">
         <div>
-            <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#fde047">Despliegue cPanel BanaHosting · v2.1</div>
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#fde047">Despliegue cPanel BanaHosting · v2.2</div>
             <h1>Instalador Web MiPromo Egresados Store</h1>
             <p style="margin:6px 0 0;font-size:13px;opacity:.9">Configura MySQL, SMTP, Endpoint &amp; Token API Perú (DNI), modo de datos y Superadmin real en minutos.</p>
         </div>

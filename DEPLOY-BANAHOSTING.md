@@ -18,7 +18,7 @@ En tu máquina local (ya incluido en este repositorio):
 1. Ingresa a **cPanel → Asistente de Bases de Datos MySQL (MySQL Database Wizard)**.
 2. Crea una base de datos (ej. `tuusuario_mipromo`) y anota el nombre completo.
 3. Crea un usuario MySQL con contraseña segura y asígnale **Todos los Privilegios (ALL PRIVILEGES)** sobre esa base de datos.
-4. Verifica en **cPanel → Seleccionar versión de PHP (Select PHP Version)** que tengas **PHP 8.2, 8.3 o 8.4** activo y las extensiones: `pdo_mysql`, `mbstring`, `openssl`, `tokenizer`, `xml`, `ctype`, `json`, `bcmath`, `fileinfo`, `gd`.
+4. Verifica en **cPanel → Seleccionar versión de PHP (Select PHP Version)** que tengas **PHP 8.3, 8.4 o 8.5** activo y las extensiones: `pdo_mysql`, `mbstring`, `openssl`, `tokenizer`, `xml`, `dom`, `ctype`, `json`, `bcmath`, `fileinfo`, `gd`, `curl`, `zip`.
 
 ## 3. Subir el Proyecto por GitHub o cPanel
 - **Opción A (Git Version Control en cPanel / SSH):**
